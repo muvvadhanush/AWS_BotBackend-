@@ -1,0 +1,306 @@
+const ChatSession = require("../models/ChatSession");
+const Connection = require("../models/Connection");
+const ConnectionKnowledge = require("../models/ConnectionKnowledge"); // Added missing import
+const Idea = require("../models/Idea");
+const aiService = require("../services/aiservice");
+const actionService = require("../services/actionService");
+const promptService = require("../services/promptService");
+
+// Helper to send standardized response
+const sendReply = (res, message, suggestions = [], aiMetadata = null) => {
+  return res.status(200).json({
+    messages: [{ role: "assistant", text: message }],
+    suggestions,
+    ai_metadata: aiMetadata
+  });
+};
+
+exports.sendMessage = async (req, res) => {
+  try {
+    const { message, connectionId, sessionId, url } = req.body;
+
+    if (!message || !sessionId) {
+      return res.status(400).json({ error: "Missing message or sessionId" });
+    }
+
+    // 1. Load or Create Session
+    let session = await ChatSession.findOne({ where: { sessionId } });
+
+    if (!session) {
+      session = await ChatSession.create({
+        sessionId,
+        connectionId,
+        messages: [],
+        currentStep: 'NONE',
+        tempData: {},
+        mode: 'FREE_CHAT' // Default mode
+      });
+    }
+
+    // Ensure session.tempData is an object
+    let tempData = session.tempData || {};
+    if (typeof tempData === 'string') {
+      try { tempData = JSON.parse(tempData); } catch (e) { tempData = {}; }
+    }
+
+    // Ensure session.mode is valid (fallback)
+    if (!session.mode) session.mode = 'FREE_CHAT';
+
+    let response = { text: "", suggestions: [], ai_metadata: null };
+    let nextStep = session.currentStep;
+
+    console.log(`[${session.mode}] Step: ${session.currentStep} | Input: "${message}"`);
+
+    // --- MODE SWITCHING LOGIC --- //
+
+    // Check Trigger to ENTER Guided Flow
+    if (session.mode === 'FREE_CHAT') {
+      const lower = message.toLowerCase();
+      if (lower.includes("submit idea") || lower.includes("new idea") || lower.includes("start submission")) {
+
+        // --- PERMISSION CHECK: GUIDED FLOW ---
+        const connectionObj = await Connection.findOne({ where: { connectionId } });
+        const perms = connectionObj ? connectionObj.permissions : null;
+        let allowedModes = ["FREE_CHAT"];
+
+        // Handle JSON string vs Object
+        let permsObj = perms;
+        if (typeof perms === 'string') {
+          try { permsObj = JSON.parse(perms); } catch (e) { permsObj = {}; }
+        }
+
+        if (permsObj && permsObj.modes) {
+          allowedModes = permsObj.modes;
+        }
+
+        if (allowedModes.includes("GUIDED_FLOW")) {
+          console.log("🔀 Switching to GUIDED_FLOW");
+          session.mode = 'GUIDED_FLOW';
+          session.currentStep = 'NONE'; // Reset step
+          // Fall through to Guided Flow logic below
+        } else {
+          console.log("⛔ Access Denied: GUIDED_FLOW not allowed.");
+          response.text = "I'm sorry, but Idea Submission is not enabled for this connection.";
+          return sendReply(res, response.text);
+        }
+
+      } else {
+        // STAY IN FREE CHAT
+        let history = session.messages || [];
+        if (typeof history === 'string') try { history = JSON.parse(history); } catch (e) { history = []; }
+
+        // --- PERMISSION CHECK: AI ENABLED ---
+        const connectionObj = await Connection.findOne({ where: { connectionId } });
+        const perms = connectionObj ? connectionObj.permissions : null;
+
+        let permsObj = perms;
+        if (typeof perms === 'string') {
+          try { permsObj = JSON.parse(perms); } catch (e) { permsObj = {}; }
+        }
+
+        let aiEnabled = true; // Default
+        if (permsObj && typeof permsObj.aiEnabled !== 'undefined') {
+          aiEnabled = permsObj.aiEnabled;
+        }
+
+        console.log(`[DEBUG] Connection: ${connectionId} | AI Enabled: ${aiEnabled}`);
+
+        let aiReply = "I'm listening.";
+        if (aiEnabled === true || aiEnabled === "true") {
+
+          // --- PHASE 12: KNOWLEDGE RETRIEVAL (RAG-LITE) ---
+          let knowledgeContext = "";
+          try {
+            const knowledgeEntries = await ConnectionKnowledge.findAll({
+              where: { connectionId, status: 'READY' }
+            });
+
+            if (knowledgeEntries.length > 0) {
+              const userTokens = message.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+              const scored = knowledgeEntries.map(k => {
+                const text = (k.cleanedText || "").toLowerCase();
+                let score = 0;
+                userTokens.forEach(token => {
+                  if (text.includes(token)) score += 1;
+                });
+                return { ...k.dataValues, score };
+              });
+
+              scored.sort((a, b) => b.score - a.score);
+              const topSnippets = scored.filter(s => s.score > 0).slice(0, 3);
+
+              if (topSnippets.length > 0) {
+                knowledgeContext = topSnippets.map(s => `- ${s.cleanedText}`).join("\n\n");
+                if (knowledgeContext.length > 2000) knowledgeContext = knowledgeContext.substring(0, 2000) + "...";
+                console.log(`📚 Injected ${topSnippets.length} snippets for chat.`);
+              }
+            }
+          } catch (err) {
+            console.error("Knowledge Retrieval Error:", err);
+          }
+
+          // --- STEP 1: WEBSITE BEHAVIOR ENGINE (PROMPT ASSEMBLY) ---
+          const assembledPrompt = await promptService.assemblePrompt(connectionId, url, knowledgeContext);
+
+          aiReply = await aiService.freeChat({
+            message,
+            history,
+            context: knowledgeContext,
+            systemPrompt: assembledPrompt
+          });
+        } else {
+          console.log("⛔ AI Chat Blocked.");
+          aiReply = "AI Chat is disabled. Please type 'submit idea' to start a form (if allowed).";
+        }
+
+        response.text = aiReply;
+
+        // Save history
+        history.push({ role: "user", text: message });
+        history.push({ role: "assistant", text: response.text });
+        session.messages = history;
+        session.changed('messages', true);
+        await session.save();
+
+        return sendReply(res, response.text);
+      }
+    }
+
+    // Check Trigger to EXIT Guided Flow
+    if (session.mode === 'GUIDED_FLOW') {
+      const lower = message.toLowerCase();
+      if (lower === "cancel" || lower === "exit" || lower === "stop") {
+        console.log("🔀 Switching to FREE_CHAT (User Cancel)");
+        session.mode = 'FREE_CHAT';
+        session.currentStep = 'NONE';
+        session.tempData = {};
+
+        response.text = "Cancelled. You are back in free chat.";
+
+        // Save transition
+        session.currentStep = 'NONE';
+        session.changed('tempData', true);
+        await session.save();
+
+        return sendReply(res, response.text);
+      }
+    }
+
+    // --- STATE MACHINE (GUIDED_FLOW) --- //
+
+    switch (session.currentStep) {
+      case 'NONE':
+        response.text = "Hi! Let's submit a new idea. What is the short TITLE of your idea?";
+        nextStep = 'TITLE';
+        break;
+
+      case 'TITLE':
+        if (message.length < 3 || /^\d+$/.test(message)) {
+          response.text = "That title seems too short or invalid. Please provide a clear, short title (e.g. 'New Dashboard Widget').";
+        } else {
+          tempData.title = message;
+          const ai = await aiService.suggestTitles(message);
+          response.ai_metadata = ai;
+          response.text = `Got it: "${message}".\n\nNow, please describe the idea in detail (at least 10 characters).`;
+          nextStep = 'DESCRIPTION';
+        }
+        break;
+
+      case 'DESCRIPTION':
+        if (message.length < 10) {
+          response.text = "Please provide a bit more detail (at least 10 characters) so we can understand the idea.";
+        } else {
+          const aiEnhance = await aiService.enhanceDescription(message);
+          const aiImpact = await aiService.predictImpact(message);
+          tempData.description = message;
+          response.ai_metadata = { ...aiEnhance, ...aiImpact };
+          response.text = "Great description. Finally, roughly how many users will this impact? (e.g. '50', 'All users', 'Admin team')";
+          response.suggestions = ["10-50", "100+", "All Users"];
+          if (aiImpact.confidence !== 'low' && aiImpact.predicted_impact > 0) {
+            response.suggestions.unshift(`${aiImpact.predicted_impact} (AI Est)`);
+          }
+          nextStep = 'IMPACT';
+        }
+        break;
+
+      case 'IMPACT':
+        const match = message.match(/(\d+)/);
+        const num = match ? parseInt(match[0], 10) : 0;
+        if (num === 0 && !/\d/.test(message) && !message.toLowerCase().includes('all')) {
+          response.text = "I couldn't understand the number of users. Please type a number or estimate (e.g. '50').";
+          response.suggestions = ["50", "100", "500"];
+        } else {
+          tempData.impactedUsers = num > 0 ? num : 0;
+          response.text = `Summary:\n- Title: ${tempData.title}\n- Desc: ${tempData.description}\n- Impact: ~${tempData.impactedUsers} users\n\nReady to submit?`;
+          response.suggestions = ["Yes, Submit", "No, Restart"];
+          nextStep = 'CONFIRM';
+        }
+        break;
+
+      case 'CONFIRM':
+        const confLower = message.toLowerCase();
+        if (confLower.includes("yes") || confLower.includes("submit") || confLower.includes("confirm")) {
+          const connectionObj = await Connection.findOne({ where: { connectionId } });
+          const actionConfig = (connectionObj && connectionObj.actionConfig)
+            ? connectionObj.actionConfig
+            : { type: "SAVE", config: { target: "ideas_table" } };
+
+          const payload = {
+            title: tempData.title,
+            description: tempData.description,
+            impact: tempData.impactedUsers,
+            connectionId: connectionId,
+            sessionId: sessionId
+          };
+
+          const result = await actionService.executeAction(actionConfig, payload, connectionObj ? connectionObj.permissions : null);
+          const refText = result.data && result.data.ideaId ? ` Reference ID: ${result.data.ideaId}.` : "";
+          response.text = `✅ ${result.message}${refText}\n\nReturning to free chat.`;
+          nextStep = 'SUBMITTED';
+          session.mode = 'FREE_CHAT';
+        } else if (confLower.includes("no") || confLower.includes("restart")) {
+          tempData = {};
+          response.text = "Cancelled. Let's start over. What is the title?";
+          nextStep = 'TITLE';
+        } else {
+          response.text = "Please type 'Yes' to submit or 'No' to cancel.";
+          response.suggestions = ["Yes, Submit", "No, Cancel"];
+        }
+        break;
+
+      case 'SUBMITTED':
+        session.mode = 'FREE_CHAT';
+        tempData = {};
+        response.text = "You are back in free chat. Type 'submit idea' to start again.";
+        nextStep = 'NONE';
+        break;
+
+      default:
+        nextStep = 'NONE';
+        response.text = "System reset. Type 'submit idea' to start.";
+        break;
+    }
+
+    // 3. Save State
+    session.currentStep = nextStep;
+    session.tempData = { ...tempData };
+    session.changed('tempData', true);
+
+    let msgs = session.messages || [];
+    if (typeof msgs === 'string') try { msgs = JSON.parse(msgs); } catch (e) { msgs = []; }
+
+    msgs.push({ role: "user", text: message });
+    msgs.push({ role: "assistant", text: response.text });
+    session.messages = msgs;
+    session.changed('messages', true);
+
+    await session.save();
+
+    // 4. Send Reply
+    return sendReply(res, response.text, response.suggestions || [], response.ai_metadata);
+
+  } catch (error) {
+    console.error("❌ State Machine Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
