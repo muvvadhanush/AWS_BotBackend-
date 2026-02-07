@@ -1,0 +1,53 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+
+const PendingExtraction = sequelize.define("PendingExtraction", {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
+    },
+    connectionId: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    source: {
+        type: DataTypes.ENUM('WIDGET', 'MANUAL'),
+        defaultValue: 'WIDGET'
+    },
+    extractorType: {
+        type: DataTypes.ENUM('BRANDING', 'KNOWLEDGE', 'FORM', 'METADATA', 'NAVIGATION'),
+        allowNull: false
+    },
+    rawData: {
+        type: DataTypes.JSONB,
+        allowNull: false
+    },
+    pageUrl: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    status: {
+        type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
+        defaultValue: 'PENDING'
+    },
+    reviewedBy: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    reviewedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    reviewNotes: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    }
+}, {
+    indexes: [
+        { fields: ['connectionId'] },
+        { fields: ['status'] }
+    ]
+});
+
+module.exports = PendingExtraction;

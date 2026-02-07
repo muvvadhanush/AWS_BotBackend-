@@ -22,13 +22,17 @@ const sequelize = require("./config/db");
 const chatRoutes = require("./routes/chatRoutes");
 const connectionRoutes = require("./routes/connectionRoutes");
 const widgetRoutes = require("./routes/widgetRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const Idea = require("./models/Idea");
 const Connection = require("./models/Connection");
 const ConnectionKnowledge = require("./models/ConnectionKnowledge");
+const PendingExtraction = require("./models/PendingExtraction");
 
 // Associations
 Connection.hasMany(ConnectionKnowledge, { foreignKey: 'connectionId', sourceKey: 'connectionId' });
 ConnectionKnowledge.belongsTo(Connection, { foreignKey: 'connectionId', targetKey: 'connectionId' });
+Connection.hasMany(PendingExtraction, { foreignKey: 'connectionId', sourceKey: 'connectionId' });
+PendingExtraction.belongsTo(Connection, { foreignKey: 'connectionId', targetKey: 'connectionId' });
 
 const app = express();
 
@@ -80,6 +84,7 @@ app.get("/", (req, res) => {
 app.use("/api/chat", chatRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/widget", widgetRoutes);
+app.use("/api/admin", adminRoutes);
 console.log("🔄 Mounting /api/v1/ideas...");
 app.use("/api/v1/ideas", require("./routes/ideaRoutes"));
 

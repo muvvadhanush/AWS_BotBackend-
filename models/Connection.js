@@ -10,7 +10,7 @@ const Connection = sequelize.define("Connection", {
 
   connectionSecret: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true // Transition to passwordHash
   },
 
   websiteName: DataTypes.STRING,

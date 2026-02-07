@@ -42,10 +42,9 @@ router.post("/hello", async (req, res) => {
     }
 });
 
-// 1.5 Widget Extraction Submit
+// 1.5 Widget Extraction Submit -> 1.7 Pending Store
 router.post("/extract", async (req, res) => {
     try {
-        // Payload: { connectionId, token, data: { siteName, assistantName, branding, knowledge, forms } }
         const { connectionId, token, data } = req.body;
 
         if (!connectionId || !data) return res.status(400).json({ error: "Missing data" });
@@ -63,38 +62,71 @@ router.post("/extract", async (req, res) => {
             return res.status(403).json({ error: "Extraction token expired" });
         }
 
-        // Process Incoming Data
-        // 1. Branding / Metadata
-        if (data.siteName) connection.websiteName = data.siteName;
-        if (data.assistantName) connection.assistantName = data.assistantName;
-        // if (data.branding) ... handle branding object
+        const PendingExtraction = require("../models/PendingExtraction");
+        const pageUrl = data.pageUrl || null;
 
-        // 2. Knowledge
+        // 1. Metadata (Site Name, Assistant Name)
+        if (data.siteName || data.assistantName) {
+            await PendingExtraction.create({
+                connectionId,
+                source: 'WIDGET',
+                extractorType: 'METADATA',
+                rawData: {
+                    websiteName: data.siteName,
+                    assistantName: data.assistantName
+                },
+                pageUrl,
+                status: 'PENDING'
+            });
+        }
+
+        // 2. Branding
+        if (data.branding) {
+            await PendingExtraction.create({
+                connectionId,
+                source: 'WIDGET',
+                extractorType: 'BRANDING',
+                rawData: data.branding,
+                pageUrl,
+                status: 'PENDING'
+            });
+        }
+
+        // 3. Knowledge
         if (data.knowledge && Array.isArray(data.knowledge)) {
             for (const item of data.knowledge) {
-                // Check dupes based on URL/Value?
-                const exists = await ConnectionKnowledge.findOne({
-                    where: { connectionId, sourceValue: item.url || item.text }
+                await PendingExtraction.create({
+                    connectionId,
+                    source: 'WIDGET',
+                    extractorType: 'KNOWLEDGE',
+                    rawData: item,
+                    pageUrl,
+                    status: 'PENDING'
                 });
-
-                if (!exists) {
-                    await ConnectionKnowledge.create({
-                        connectionId,
-                        sourceType: item.type === 'url' ? 'URL' : 'TEXT',
-                        sourceValue: item.url || item.text,
-                        status: 'PENDING',
-                        metadata: { source: 'widget_extract', pageTitle: item.title }
-                    });
-                }
             }
         }
 
-        // 3. Forms (Future Phase)
-        // if (data.forms) ...
+        // 4. Navigation (New)
+        if (data.navigation && Array.isArray(data.navigation)) {
+            for (const item of data.navigation) {
+                await PendingExtraction.create({
+                    connectionId,
+                    source: 'WIDGET',
+                    extractorType: 'NAVIGATION',
+                    rawData: item, // { label, action, selector }
+                    pageUrl,
+                    status: 'PENDING'
+                });
+            }
+        }
 
-        await connection.save();
+        // Update connection status
+        if (connection.status === 'EXTRACTION_REQUESTED') {
+            connection.status = 'READY';
+            await connection.save();
+        }
 
-        res.json({ success: true, message: "Extraction received" });
+        res.json({ success: true, message: "Extraction received for review" });
 
     } catch (error) {
         console.error("Widget Extract Error:", error);
