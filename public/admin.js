@@ -111,8 +111,19 @@ document.getElementById('addOverrideBtn').addEventListener('click', () => {
 async function loadConnections() {
     try {
         const res = await fetch(`${API_BASE}/list`);
-        const connections = await res.json();
+        const data = await res.json();
 
+        if (!res.ok) {
+            console.error("❌ API Error:", data);
+            showToast(data.error || 'Failed to load connections', true);
+            connectionsList.innerHTML = `<div class="no-data" style="color: var(--danger)">
+                Error: ${data.error || 'Server Internal Error'}<br>
+                <small>${data.hint || ''}</small>
+            </div>`;
+            return;
+        }
+
+        const connections = data;
         if (connections.length === 0) {
             connectionsList.innerHTML = '<div class="no-data">No connections found. Create one!</div>';
             return;
@@ -138,7 +149,8 @@ async function loadConnections() {
             </div>
         `).join('');
     } catch (err) {
-        showToast('Error loading connections', true);
+        console.error("❌ loadConnections failure:", err);
+        showToast('Error connecting to server', true);
     }
 }
 
