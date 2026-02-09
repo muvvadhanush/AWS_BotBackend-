@@ -11,10 +11,7 @@ services:
     env_file:
       - .env
     environment:
-      - DB_HOST=db
       - NODE_ENV=${NODE_ENV:-production}
-    depends_on:
-      - db
     networks:
       - chatbot-net
     restart: unless-stopped
@@ -24,27 +21,6 @@ services:
       timeout: 10s
       retries: 3
 
-  db:
-    image: postgres:15
-    container_name: chatbot-db
-    environment:
-      POSTGRES_DB: ${DB_NAME:-chatbot_db}
-      POSTGRES_USER: ${DB_USER:-user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - chatbot-net
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
 networks:
   chatbot-net:
     driver: bridge
-
-volumes:
-  postgres_data:
