@@ -28,7 +28,16 @@ async function applyRls() {
         console.log('Database connected successfully.');
 
         // --- Apply RLS Policies ---
-        const tables = ['ChatSessions', 'Connections', 'Ideas', 'ConnectionKnowledges'];
+        // --- Apply RLS Policies ---
+        const tables = [
+            'ChatSessions',
+            'Connections',
+            'Ideas',
+            'ConnectionKnowledges',
+            'Users',
+            'PendingExtractions',
+            'SequelizeMeta'
+        ];
 
         for (const table of tables) {
             console.log(`Processing table: ${table}`);
