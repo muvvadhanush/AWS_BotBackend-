@@ -37,6 +37,16 @@ exports.assemblePrompt = async (connectionId, pageUrl, context) => {
             prompt += `- ESCALATION PATH: ${profile.hardConstraints.escalation_path}\n`;
         }
 
+        // Phase 3.3: Policies (Dynamic Constraints)
+        if (connection.policies && Array.isArray(connection.policies) && connection.policies.length > 0) {
+            console.log(`🛡️ [AUDIT] Enforcing ${connection.policies.length} policies for ${connectionId}`);
+            prompt += `\n## CRITICAL POLICIES (MUST FOLLOW)\n`;
+            connection.policies.forEach((policy, i) => {
+                prompt += `${i + 1}. ${policy}\n`;
+            });
+            prompt += `- If the user asks something that violates these policies, polite refuse.\n`;
+        }
+
         // 3. Page Overrides (Matched)
         if (pageUrl && overrides.length > 0) {
             const path = new URL(pageUrl).pathname;

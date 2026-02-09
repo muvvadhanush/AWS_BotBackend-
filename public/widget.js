@@ -457,7 +457,7 @@
       const hostUrl = window.location.origin;
       console.log(`🔍 Auto-extracting knowledge base from: ${hostUrl}`);
 
-      const response = await fetch(`${baseUrl}/api/connections/${config.connectionId}/auto-extract`, {
+      const response = await fetch(`${baseUrl}/api/v1/connections/${config.connectionId}/auto-extract`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

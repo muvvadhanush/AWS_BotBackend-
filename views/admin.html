@@ -181,6 +181,7 @@
                         <button class="tab-btn active" data-tab="tab-general">General</button>
                         <button class="tab-btn" data-tab="tab-behavior">🧠 Behavior</button>
                         <button class="tab-btn" data-tab="tab-knowledge">Knowledge & Branding</button>
+                        <button class="tab-btn" data-tab="tab-reviews">Reviews (Pending)</button>
                     </div>
 
                     <!-- General Tab -->
@@ -375,6 +376,33 @@
                             </div>
                         </div>
 
+                    </div>
+
+                    <!-- Review Tab -->
+                    <div id="tab-reviews" class="tab-content">
+                        <div class="section-box">
+                            <h3>🔍 Pending Extractions</h3>
+                            <div style="margin-bottom: 10px;">
+                                <button type="button" id="refreshReviewsBtn" class="btn secondary small">Refresh
+                                    List</button>
+                            </div>
+                            <div class="knowledge-list-container">
+                                <table class="knowledge-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Content</th>
+                                            <th>Explainability (Why?)</th>
+                                            <th>Score</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reviewsTableBody">
+                                        <!-- Rows injected by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

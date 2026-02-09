@@ -108,46 +108,25 @@ exports.sendMessage = async (req, res) => {
         let aiReply = "I'm listening.";
         if (aiEnabled === true || aiEnabled === "true") {
 
-          // --- PHASE 12: KNOWLEDGE RETRIEVAL (RAG-LITE) ---
-          let knowledgeContext = "";
-          try {
-            const knowledgeEntries = await ConnectionKnowledge.findAll({
-              where: { connectionId, status: 'READY' }
-            });
-
-            if (knowledgeEntries.length > 0) {
-              const userTokens = message.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-              const scored = knowledgeEntries.map(k => {
-                const text = (k.cleanedText || "").toLowerCase();
-                let score = 0;
-                userTokens.forEach(token => {
-                  if (text.includes(token)) score += 1;
-                });
-                return { ...k.dataValues, score };
-              });
-
-              scored.sort((a, b) => b.score - a.score);
-              const topSnippets = scored.filter(s => s.score > 0).slice(0, 3);
-
-              if (topSnippets.length > 0) {
-                knowledgeContext = topSnippets.map(s => `- ${s.cleanedText}`).join("\n\n");
-                if (knowledgeContext.length > 2000) knowledgeContext = knowledgeContext.substring(0, 2000) + "...";
-                console.log(`📚 Injected ${topSnippets.length} snippets for chat.`);
-              }
-            }
-          } catch (err) {
-            console.error("Knowledge Retrieval Error:", err);
-          }
-
           // --- STEP 1: WEBSITE BEHAVIOR ENGINE (PROMPT ASSEMBLY) ---
-          const assembledPrompt = await promptService.assemblePrompt(connectionId, url, knowledgeContext);
+          // Phase 2 Update: Pass empty context to promptService, let aiService handle RAG
+          const assembledPrompt = await promptService.assemblePrompt(connectionId, url, "");
 
-          aiReply = await aiService.freeChat({
+          const aiOutput = await aiService.freeChat({
             message,
             history,
-            context: knowledgeContext,
+            connectionId, // Pass connectionId for Shadow/Active retrieval
             systemPrompt: assembledPrompt
           });
+
+          // Handle Object return (Phase 2.3)
+          if (typeof aiOutput === 'object' && aiOutput.reply) {
+            aiReply = aiOutput.reply;
+            response.ai_metadata = { sources: aiOutput.sources };
+            console.log("[DEBUG] Controller set metadata:", JSON.stringify(response.ai_metadata));
+          } else {
+            aiReply = aiOutput;
+          }
         } else {
           console.log("⛔ AI Chat Blocked.");
           aiReply = "AI Chat is disabled. Please type 'submit idea' to start a form (if allowed).";
@@ -157,7 +136,11 @@ exports.sendMessage = async (req, res) => {
 
         // Save history
         history.push({ role: "user", text: message });
-        history.push({ role: "assistant", text: response.text });
+        history.push({
+          role: "assistant",
+          text: response.text,
+          ai_metadata: response.ai_metadata || null
+        });
         session.messages = history;
         session.changed('messages', true);
         await session.save();
@@ -182,7 +165,7 @@ exports.sendMessage = async (req, res) => {
         session.changed('tempData', true);
         await session.save();
 
-        return sendReply(res, response.text);
+        return sendReply(res, response.text, response.suggestions || [], response.ai_metadata);
       }
     }
 

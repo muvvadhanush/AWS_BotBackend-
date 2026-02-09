@@ -6,8 +6,11 @@ const ConnectionKnowledge = require("../models/ConnectionKnowledge");
 const PendingExtraction = require("../models/PendingExtraction");
 const connectionController = require("../controllers/connectionController");
 
+const authorize = require("../middleware/rbac");
+const basicAuth = require("../middleware/auth");
+
 // Existing Analytics Route
-router.get("/analytics", async (req, res) => {
+router.get("/analytics", basicAuth, authorize(['VIEWER', 'EDITOR', 'OWNER']), async (req, res) => {
     try {
         const sessions = await ChatSession.findAll();
         res.json({
@@ -20,14 +23,14 @@ router.get("/analytics", async (req, res) => {
 });
 
 // Knowledge Ingestion Route
-router.post("/connections/:connectionId/knowledge/ingest", connectionController.ingestKnowledge);
-router.post("/connections/:connectionId/branding/fetch", connectionController.fetchBranding);
-router.get("/connections/:connectionId/details", connectionController.getConnectionDetails);
+router.post("/connections/:connectionId/knowledge/ingest", basicAuth, authorize(['EDITOR', 'OWNER']), connectionController.ingestKnowledge);
+router.post("/connections/:connectionId/branding/fetch", basicAuth, authorize(['EDITOR', 'OWNER']), connectionController.fetchBranding);
+router.get("/connections/:connectionId/details", basicAuth, authorize(['VIEWER', 'EDITOR', 'OWNER']), connectionController.getConnectionDetails);
 
 // --- Phase 1.7: Admin Review ---
 
 // 1.7.2 List Pending Extractions
-router.get("/connections/:connectionId/extractions", async (req, res) => {
+router.get("/connections/:connectionId/extractions", basicAuth, authorize(['VIEWER', 'EDITOR', 'OWNER']), async (req, res) => {
     try {
         const { connectionId } = req.params;
         const { status } = req.query;
@@ -47,7 +50,7 @@ router.get("/connections/:connectionId/extractions", async (req, res) => {
 });
 
 // 1.7.3 Review Extraction (Approve/Reject)
-router.post("/extractions/:extractionId/review", async (req, res) => {
+router.post("/extractions/:extractionId/review", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
     try {
         const { extractionId } = req.params;
         const { action, notes } = req.body; // action: "APPROVE" | "REJECT"
@@ -63,7 +66,7 @@ router.post("/extractions/:extractionId/review", async (req, res) => {
             extraction.status = 'REJECTED';
             extraction.reviewNotes = notes;
             extraction.reviewedAt = new Date();
-            // extraction.reviewedBy = req.user.username; // If we had auth user in req
+            extraction.reviewedBy = req.user.username; // Log reviewer
             await extraction.save();
             return res.json({ success: true, status: 'REJECTED' });
         }
@@ -90,6 +93,8 @@ router.post("/extractions/:extractionId/review", async (req, res) => {
                     sourceType: item.type === 'url' ? 'URL' : 'TEXT',
                     sourceValue: item.url || item.text,
                     status: 'READY', // Directly ready after approval
+                    visibility: 'ACTIVE', // Phase 2: Active Knowledge
+                    confidenceScore: 1.0, // Admin approved
                     metadata: { source: 'admin_approved', pageTitle: item.title }
                 });
             }
@@ -107,6 +112,7 @@ router.post("/extractions/:extractionId/review", async (req, res) => {
             extraction.status = 'APPROVED';
             extraction.reviewNotes = notes;
             extraction.reviewedAt = new Date();
+            extraction.reviewedBy = req.user.username; // Log reviewer
             await extraction.save();
 
             return res.json({ success: true, status: 'APPROVED' });
@@ -116,6 +122,69 @@ router.post("/extractions/:extractionId/review", async (req, res) => {
 
     } catch (error) {
         console.error("Review Error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Phase 2.4: Feedback Loop ---
+router.post("/chat-sessions/:sessionId/messages/:index/feedback", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
+    try {
+        const { sessionId, index } = req.params;
+        const { rating, notes } = req.body; // rating: "CORRECT" | "INCORRECT"
+
+        const session = await ChatSession.findOne({ where: { sessionId } });
+        if (!session) return res.status(404).json({ error: "Session not found" });
+
+        const messages = session.messages || [];
+        const msgIndex = parseInt(index);
+
+        if (isNaN(msgIndex) || msgIndex < 0 || msgIndex >= messages.length) {
+            return res.status(400).json({ error: "Invalid message index" });
+        }
+
+        const targetMsg = messages[msgIndex];
+        if (targetMsg.role !== 'assistant') {
+            return res.status(400).json({ error: "Can only rate assistant messages" });
+        }
+
+        // 1. Update Message with Feedback
+        targetMsg.feedback = {
+            rating,
+            notes,
+            createdAt: new Date()
+        };
+
+        // Update the array in place
+        messages[msgIndex] = targetMsg;
+        session.messages = messages;
+        session.changed('messages', true);
+        await session.save();
+
+        // 2. Adjust Intelligence (Confidence Score)
+        if (targetMsg.ai_metadata && targetMsg.ai_metadata.sources) {
+            for (const source of targetMsg.ai_metadata.sources) {
+                if (source.sourceId) {
+                    const knowledge = await ConnectionKnowledge.findByPk(source.sourceId);
+                    if (knowledge) {
+                        let score = knowledge.confidenceScore || 0.5;
+
+                        if (rating === 'CORRECT') {
+                            score = Math.min(score + 0.1, 1.0); // Boost
+                        } else if (rating === 'INCORRECT') {
+                            score = Math.max(score - 0.2, 0.0); // Penalize harder
+                        }
+
+                        knowledge.confidenceScore = score;
+                        await knowledge.save();
+                    }
+                }
+            }
+        }
+
+        res.json({ success: true, message: "Feedback recorded and intelligence updated." });
+
+    } catch (error) {
+        console.error("Feedback Error:", error);
         res.status(500).json({ error: error.message });
     }
 });

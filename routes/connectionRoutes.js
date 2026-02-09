@@ -7,11 +7,18 @@ const Connection = require("../models/Connection");
 const ConnectionKnowledge = require("../models/ConnectionKnowledge");
 const scraperService = require("../services/scraperService");
 const aiService = require("../services/aiservice");
+const authorize = require("../middleware/rbac");
+const basicAuth = require("../middleware/auth");
 
 console.log("🔥 connectionRoutes.js LOADED");
 
+router.use((req, res, next) => {
+  console.log(`[DEBUG] Connection Route Hit: ${req.method} ${req.path}`);
+  next();
+});
+
 // Create a new connection
-router.post("/create", async (req, res) => {
+router.post("/create", basicAuth, authorize(['OWNER']), async (req, res) => {
   try {
     // Phase 1: Secure Creation
     if (req.body.password) {
@@ -30,7 +37,7 @@ router.post("/create", async (req, res) => {
 
 // --- PART 1: AUTO EXTRACT / BRANDING (Identity) ---
 // Fetch Branding (Favicon/Logo) - Updates Identity ONLY
-router.post("/:connectionId/branding/fetch", async (req, res) => {
+router.post("/:connectionId/branding/fetch", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
   console.log(`📡 Hit branding/fetch for ${req.params.connectionId}`);
   try {
     const { connectionId } = req.params;
@@ -60,7 +67,7 @@ router.post("/:connectionId/branding/fetch", async (req, res) => {
 
 // --- PART 2: KNOWLEDGE INGESTION (Training) ---
 // Ingest Knowledge - Updates Knowledge ONLY
-router.post("/:connectionId/knowledge/ingest", async (req, res) => {
+router.post("/:connectionId/knowledge/ingest", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
   try {
     const { connectionId } = req.params;
     const { sourceType, sourceValue } = req.body; // 'URL' or 'TEXT'
@@ -71,25 +78,27 @@ router.post("/:connectionId/knowledge/ingest", async (req, res) => {
     if (!connection) return res.status(404).json({ error: "Connection not found" });
 
     // Idempotency: Check if exists to avoid duplicates
-    // We match strict sourceType + sourceValue for the same connection
     let knowledge = await ConnectionKnowledge.findOne({
       where: { connectionId, sourceType, sourceValue }
     });
 
     // Process Content
     let contentData = { rawText: "", cleanedText: "" };
-
-    if (sourceType === 'URL') {
+    if (sourceType.toLowerCase() === 'url') {
       contentData = await scraperService.ingestURL(sourceValue);
     } else {
       contentData = scraperService.ingestText(sourceValue);
     }
+
+    // Compute Hash
+    const contentHash = crypto.createHash('sha256').update(contentData.cleanedText || "").digest('hex');
 
     if (knowledge) {
       // Update existing
       await knowledge.update({
         rawText: contentData.rawText,
         cleanedText: contentData.cleanedText,
+        contentHash, // Add this
         status: 'READY',
         updatedAt: new Date()
       });
@@ -101,6 +110,7 @@ router.post("/:connectionId/knowledge/ingest", async (req, res) => {
         sourceValue,
         rawText: contentData.rawText,
         cleanedText: contentData.cleanedText,
+        contentHash, // Add this
         status: 'READY',
         metadata: {}
       });
@@ -121,98 +131,110 @@ router.post("/:connectionId/knowledge/ingest", async (req, res) => {
  * Goal: Initialize Bot Identity.
  * Rule: Identity fields ONLY. No training data.
  */
-router.post("/:connectionId/auto-extract", async (req, res) => {
-  try {
-    const { connectionId } = req.params;
-    const { url } = req.body;
-    const isTemp = connectionId === 'temp';
-
-    console.log(`📡 [DEBUG] Auto-Extract started for connectionId: ${connectionId}, url: ${url}`);
-
-    let connection = null;
-    if (!isTemp) {
-      connection = await Connection.findOne({ where: { connectionId } });
-      if (!connection) {
-        console.warn(`⚠️ [DEBUG] Connection not found for ID: ${connectionId}`);
-        return res.status(404).json({ error: "Connection not found" });
-      }
-    }
-
-    if (!url) return res.status(400).json({ error: "URL is required" });
-
-    // 1. Scrape Metadata & Text
-    console.log(`🔍 [DEBUG] Step 1: Scraping website...`);
-    const result = await scraperService.scrapeWebsite(url);
-    if (!result.success) {
-      console.error(`🔥 [DEBUG] Step 1 Failed: ${result.error}`);
-      return res.status(500).json({ error: result.error });
-    }
-
-    // 2. Fetch Branding (Images)
-    console.log(`🎨 [DEBUG] Step 2: Fetching branding...`);
-    const branding = await scraperService.fetchBranding(url, connectionId);
-
-    // 3. AI Inference for Identity
-    console.log(`🤖 [DEBUG] Step 3: Running AI inference...`);
-    let identity = null;
+router.post("/:connectionId/auto-extract",
+  basicAuth,
+  authorize(['OWNER']),
+  require("../middleware/rateLimiter").widgetExtraction,
+  async (req, res) => {
     try {
-      identity = await aiService.inferBotIdentity(result.rawText);
-    } catch (aiErr) {
-      console.error("🔥 AI Inference failed during extract:", aiErr.message);
-    }
+      const { connectionId } = req.params;
+      const { url } = req.body;
+      const isTemp = connectionId === 'temp';
 
-    if (!identity) {
-      console.warn(`⚠️ [DEBUG] Step 3: AI Inference returned null`);
-    }
-
-    // 4. In-Memory Identity object
-    const botIdentity = {
-      assistantName: identity?.bot_name || result.metadata?.title || "AI Assistant",
-      welcomeMessage: identity?.welcome_message || `Welcome to ${result.metadata?.title || 'our site'}!`,
-      tone: identity?.tone || "neutral",
-      websiteDescription: identity?.site_summary || result.metadata?.description || "",
-      logoUrl: branding.logoPath || branding.faviconPath || null, // Best available
-      brandingStatus: branding.status
-    };
-
-    // 5. Update DB ONLY if not temp
-    if (connection) {
-      console.log(`💾 [DEBUG] Step 5: Updating database for connection...`);
-      await connection.update({
-        assistantName: botIdentity.assistantName,
-        welcomeMessage: botIdentity.welcomeMessage,
-        tone: botIdentity.tone,
-        websiteDescription: botIdentity.websiteDescription,
-        logoUrl: botIdentity.logoUrl,
-        brandingStatus: botIdentity.brandingStatus
-      });
-    }
-
-    console.log(`✅ [DEBUG] Auto-Extract complete for ${connectionId}`);
-    res.json({
-      status: "initialized",
-      isTemp,
-      bot_identity: {
-        name: botIdentity.assistantName,
-        welcomeMessage: botIdentity.welcomeMessage,
-        tone: botIdentity.tone,
-        summary: botIdentity.websiteDescription,
-        logoUrl: botIdentity.logoUrl
+      // FEATURE FLAG CHECK
+      const settings = require("../config/settings");
+      if (!settings.features.extractionEnabled) {
+        console.warn(`🛑 [BLOCKED] Auto-extract attempted in ${settings.env} mode.`);
+        return res.status(403).json({ error: "Feature Disabled: Auto-Extraction is OFF in this environment." });
       }
-    });
 
-  } catch (error) {
-    console.error("🔥 [DEBUG] CRITICAL LOG - Auto-Extract Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+      console.log(`📡 [DEBUG] Auto-Extract started for connectionId: ${connectionId}, url: ${url}`);
+
+      let connection = null;
+      if (!isTemp) {
+        connection = await Connection.findOne({ where: { connectionId } });
+        if (!connection) {
+          console.warn(`⚠️ [DEBUG] Connection not found for ID: ${connectionId}`);
+          return res.status(404).json({ error: "Connection not found" });
+        }
+      }
+
+      if (!url) return res.status(400).json({ error: "URL is required" });
+
+      // 1. Scrape Metadata & Text
+      console.log(`🔍 [DEBUG] Step 1: Scraping website...`);
+      const result = await scraperService.scrapeWebsite(url);
+      if (!result.success) {
+        console.error(`🔥 [DEBUG] Step 1 Failed: ${result.error}`);
+        return res.status(500).json({ error: result.error });
+      }
+
+      // 2. Fetch Branding (Images)
+      console.log(`🎨 [DEBUG] Step 2: Fetching branding...`);
+      const branding = await scraperService.fetchBranding(url, connectionId);
+
+      // 3. AI Inference for Identity
+      console.log(`🤖 [DEBUG] Step 3: Running AI inference...`);
+      let identity = null;
+      try {
+        identity = await aiService.inferBotIdentity(result.rawText);
+      } catch (aiErr) {
+        console.error("🔥 AI Inference failed during extract:", aiErr.message);
+      }
+
+      if (!identity) {
+        console.warn(`⚠️ [DEBUG] Step 3: AI Inference returned null`);
+      }
+
+      // 4. In-Memory Identity object
+      const botIdentity = {
+        assistantName: identity?.bot_name || result.metadata?.title || "AI Assistant",
+        welcomeMessage: identity?.welcome_message || `Welcome to ${result.metadata?.title || 'our site'}!`,
+        tone: identity?.tone || "neutral",
+        websiteDescription: identity?.site_summary || result.metadata?.description || "",
+        logoUrl: branding.logoPath || branding.faviconPath || null, // Best available
+        brandingStatus: branding.status
+      };
+
+      // 5. Update DB ONLY if not temp
+      if (connection) {
+        console.log(`💾 [DEBUG] Step 5: Updating database for connection...`);
+        await connection.update({
+          assistantName: botIdentity.assistantName,
+          welcomeMessage: botIdentity.welcomeMessage,
+          tone: botIdentity.tone,
+          websiteDescription: botIdentity.websiteDescription,
+          logoUrl: botIdentity.logoUrl,
+          brandingStatus: botIdentity.brandingStatus
+        });
+      }
+
+      console.log(`✅ [DEBUG] Auto-Extract complete for ${connectionId}`);
+      res.json({
+        status: "initialized",
+        isTemp,
+        bot_identity: {
+          name: botIdentity.assistantName,
+          welcomeMessage: botIdentity.welcomeMessage,
+          tone: botIdentity.tone,
+          summary: botIdentity.websiteDescription,
+          logoUrl: botIdentity.logoUrl
+        }
+      });
+
+    } catch (error) {
+      console.error("🔥 [DEBUG] CRITICAL LOG - Auto-Extract Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
 /**
  * KNOWLEDGE INGESTION (Training)
  * Goal: Add granular knowledge chunks.
  * Rule: Training data ONLY. No identity changes.
  */
-router.post("/:connectionId/knowledge-ingest", async (req, res) => {
+router.post("/:connectionId/knowledge-ingest", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
+  console.log(`!!! HIT KNOWLEDGE-INGEST ROUTE !!! URL=${req.originalUrl}`);
   try {
     const { connectionId } = req.params;
 
@@ -228,6 +250,7 @@ router.post("/:connectionId/knowledge-ingest", async (req, res) => {
     if (!connection) return res.status(404).json({ error: "Connection not found" });
 
     // Process Content
+    console.error(`[DEBUG] Ingest request: Type=${sourceType}, Value=${sourceValue}`);
     let contentData = { rawText: "", cleanedText: "" };
     if (sourceType.toLowerCase() === 'url') {
       contentData = await scraperService.ingestURL(sourceValue);
@@ -235,13 +258,21 @@ router.post("/:connectionId/knowledge-ingest", async (req, res) => {
       contentData = scraperService.ingestText(sourceValue);
     }
 
+    console.error(`[DEBUG] Scraper returned: RawLen=${contentData.rawText?.length}, CleanedLen=${contentData.cleanedText?.length}`);
+
+    // Compute Hash
+    const contentHash = crypto.createHash('sha256').update(contentData.cleanedText || "").digest('hex');
+    console.error(`[DEBUG] Computed Hash: ${contentHash} for ${sourceValue}`);
+
     // Idempotency: Update existing or create new
     const [knowledge, created] = await ConnectionKnowledge.findOrCreate({
       where: { connectionId, sourceType: sourceType.toUpperCase(), sourceValue },
       defaults: {
         rawText: contentData.rawText,
         cleanedText: contentData.cleanedText,
-        status: 'READY'
+        contentHash,
+        status: 'READY',
+        lastCheckedAt: new Date()
       }
     });
 
@@ -249,7 +280,9 @@ router.post("/:connectionId/knowledge-ingest", async (req, res) => {
       await knowledge.update({
         rawText: contentData.rawText,
         cleanedText: contentData.cleanedText,
-        status: 'READY'
+        contentHash,
+        status: 'READY',
+        lastCheckedAt: new Date()
       });
     }
 
@@ -265,8 +298,52 @@ router.post("/:connectionId/knowledge-ingest", async (req, res) => {
   }
 });
 
+// --- Phase 3.2: Drift Detection (Public via Widget) ---
+router.post("/:connectionId/drift-check",
+  require("../middleware/rateLimiter").widgetExtraction, // Rate Limit First
+  async (req, res) => {
+    try {
+      const { connectionId } = req.params;
+      const { url, currentHash } = req.body;
+
+      if (!url || !currentHash) {
+        return res.status(400).json({ error: "Missing url or hash" });
+      }
+
+      // Find Knowledge for this URL
+      // We assume 'sourceValue' stores the URL
+      const knowledge = await ConnectionKnowledge.findOne({
+        where: { connectionId, sourceType: 'URL', sourceValue: url }
+      });
+
+      if (!knowledge) {
+        // Not monitored, ignore
+        return res.json({ status: "uknown", monitored: false });
+      }
+
+      // Compare Hash
+      if (knowledge.contentHash !== currentHash) {
+        console.warn(`⚠️ [AUDIT] DRIFT DETECTED for ${url} (Connection: ${connectionId})`);
+        await knowledge.update({
+          status: 'STALE',
+          lastCheckedAt: new Date(),
+          metadata: { ...knowledge.metadata, driftDetected: true, lastDriftAt: new Date() }
+        });
+        return res.json({ status: "drifted", monitored: true });
+      }
+
+      // All good
+      await knowledge.update({ lastCheckedAt: new Date() });
+      res.json({ status: "synced", monitored: true });
+
+    } catch (error) {
+      console.error("Drift Check Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 // Scrape website and extract knowledge base
-router.post("/scrape", async (req, res) => {
+router.post("/scrape", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
   try {
     const { url } = req.body;
 
@@ -299,7 +376,7 @@ router.post("/scrape", async (req, res) => {
 });
 
 // Auto-extract knowledge base from host website
-router.post("/auto-extract", async (req, res) => {
+router.post("/auto-extract", basicAuth, authorize(['OWNER']), async (req, res) => {
   try {
     const { connectionId, hostUrl } = req.body;
 
@@ -371,7 +448,7 @@ router.post("/auto-extract", async (req, res) => {
 });
 
 // Get all connections
-router.get("/list", async (req, res) => {
+router.get("/list", basicAuth, authorize(['VIEWER', 'EDITOR', 'OWNER']), async (req, res) => {
   try {
     const connections = await Connection.findAll({
       attributes: ["id", "connectionId", "websiteName", "assistantName", "createdAt", "logoUrl"]
@@ -398,7 +475,7 @@ router.get("/list", async (req, res) => {
 });
 
 // Get single connection
-router.get("/:connectionId", async (req, res) => {
+router.get("/:connectionId", basicAuth, authorize(['VIEWER', 'EDITOR', 'OWNER']), async (req, res) => {
   try {
     const connection = await Connection.findOne({
       where: { connectionId: req.params.connectionId }
@@ -413,7 +490,7 @@ router.get("/:connectionId", async (req, res) => {
 });
 
 // Get connection details with knowledge base
-router.get("/:connectionId/details", async (req, res) => {
+router.get("/:connectionId/details", basicAuth, authorize(['VIEWER', 'EDITOR', 'OWNER']), async (req, res) => {
   try {
     const connection = await Connection.findOne({
       where: { connectionId: req.params.connectionId },
@@ -429,7 +506,7 @@ router.get("/:connectionId/details", async (req, res) => {
 });
 
 // Update connection
-router.put("/:connectionId", async (req, res) => {
+router.put("/:connectionId", basicAuth, authorize(['EDITOR', 'OWNER']), async (req, res) => {
   try {
     const connection = await Connection.findOne({
       where: { connectionId: req.params.connectionId }
@@ -445,7 +522,7 @@ router.put("/:connectionId", async (req, res) => {
 });
 
 // Delete connection
-router.delete("/:connectionId", async (req, res) => {
+router.delete("/:connectionId", basicAuth, authorize(['OWNER']), async (req, res) => {
   try {
     const connection = await Connection.findOne({
       where: { connectionId: req.params.connectionId }
@@ -463,7 +540,7 @@ router.delete("/:connectionId", async (req, res) => {
 // --- Phase 1: Admin Extraction Controls ---
 
 // 1.3 Admin Enable Extraction
-router.post("/:connectionId/extraction/enable", async (req, res) => {
+router.post("/:connectionId/extraction/enable", basicAuth, authorize(['OWNER']), async (req, res) => {
   try {
     const { connectionId } = req.params;
     const { allowedExtractors } = req.body;
@@ -487,7 +564,7 @@ router.post("/:connectionId/extraction/enable", async (req, res) => {
 });
 
 // 1.4 Admin Trigger Extraction
-router.post("/:connectionId/extract", async (req, res) => {
+router.post("/:connectionId/extract", basicAuth, authorize(['OWNER']), async (req, res) => {
   try {
     const { connectionId } = req.params;
 

@@ -33,6 +33,24 @@ const ConnectionKnowledge = sequelize.define("ConnectionKnowledge", {
         type: DataTypes.ENUM('PENDING', 'READY', 'FAILED'),
         defaultValue: 'PENDING'
     },
+    // Phase 2: Shadow Knowledge
+    visibility: {
+        type: DataTypes.ENUM('SHADOW', 'ACTIVE'),
+        defaultValue: 'SHADOW'
+    },
+    confidenceScore: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0.5
+    },
+    // Phase 3.2: Drift Detection
+    contentHash: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    lastCheckedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
     metadata: {
         type: DataTypes.JSON,
         allowNull: true,

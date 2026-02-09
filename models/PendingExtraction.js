@@ -42,6 +42,16 @@ const PendingExtraction = sequelize.define("PendingExtraction", {
     reviewNotes: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    // Phase 2: Explainability
+    triggerQueries: {
+        type: DataTypes.JSONB,
+        comment: "Queries that triggered this extraction suggestion",
+        defaultValue: []
+    },
+    relevanceScore: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0.0
     }
 }, {
     indexes: [

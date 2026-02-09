@@ -590,3 +590,90 @@ window.editConnection = async (id) => {
         showToast('Error loading connection details', true);
     }
 }
+
+// --- REVIEW TAB LOGIC ---
+
+async function loadReviews() {
+    if (!currentEditId) return;
+    const tbody = document.getElementById('reviewsTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE}/${currentEditId}/extractions?status=PENDING`);
+        const data = await res.json();
+        renderReviewsTable(data);
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Error loading reviews</td></tr>';
+    }
+}
+
+function renderReviewsTable(items) {
+    const tbody = document.getElementById('reviewsTableBody');
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">No pending reviews.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map(item => {
+        let contentPreview = JSON.stringify(item.rawData);
+        if (item.extractorType === 'KNOWLEDGE') {
+            contentPreview = item.rawData.url || item.rawData.text || JSON.stringify(item.rawData);
+        } else if (item.extractorType === 'BRANDING') {
+            contentPreview = "Branding Assets";
+        }
+
+        // Explainability: Why Suggested?
+        let contrast = "";
+        if (item.triggerQueries && item.triggerQueries.length > 0) {
+            contrast = `Triggered by: "${item.triggerQueries.join('", "')}"`;
+        }
+        if (item.relevanceScore) {
+            contrast += ` <br><small>(Score: ${item.relevanceScore.toFixed(2)})</small>`;
+        }
+
+        return `
+        <tr>
+            <td><span class="badge">${item.extractorType}</span></td>
+            <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis;" title="${contentPreview}">${contentPreview}</td>
+            <td><small>${contrast || 'N/A'}</small></td>
+            <td>${(item.relevanceScore || 0).toFixed(2)}</td>
+            <td>
+                <button class="btn secondary small" onclick="reviewExtraction('${item.id}', 'APPROVE')">Approve</button>
+                <button class="btn text danger small" onclick="reviewExtraction('${item.id}', 'REJECT')">Reject</button>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
+
+window.reviewExtraction = async (id, action) => {
+    if (!confirm(`Are you sure you want to ${action} this item?`)) return;
+
+    try {
+        const res = await fetch(`/api/v1/admin/extractions/${id}/review`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, notes: "Admin Review" }) // Simple notes for now
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(`Item ${action}ED`);
+            loadReviews(); // Refresh list
+            if (action === 'APPROVE') {
+                reloadKnowledgeTable(currentEditId);
+            }
+        } else {
+            showToast(`Failed to ${action}`, true);
+        }
+    } catch (e) {
+        showToast(`Error: ${e.message}`, true);
+    }
+};
+
+document.getElementById('refreshReviewsBtn').addEventListener('click', loadReviews);
+
+// Hook into Tab switch to auto-load
+document.querySelector('[data-tab="tab-reviews"]').addEventListener('click', () => {
+    loadReviews();
+});

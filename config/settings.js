@@ -1,0 +1,75 @@
+require('dotenv').config();
+
+const validEnvironments = ['development', 'staging', 'production'];
+const env = process.env.NODE_ENV;
+
+// 1. Fail Fast on Invalid Environment
+if (!validEnvironments.includes(env)) {
+    console.error(`
+    🛑 CRITICAL ERROR: Invalid NODE_ENV "${env}"
+    Allowed values: ${validEnvironments.join(', ')}
+    
+    Fix: set NODE_ENV=development|staging|production
+  `);
+    process.exit(1);
+}
+
+console.log(`🚦 Environment: ${env.toUpperCase()}`);
+
+const settings = {
+    env,
+    port: process.env.PORT || 5000,
+
+    // 2. Database Config (Delegated to Sequelize)
+    db: {
+        username: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 5432,
+        dialect: 'postgres',
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
+
+    // 3. Environment-Scoped Defaults
+    features: {
+        aiEnabled: process.env.AI_ENABLED === 'true' || true, // Default ON
+
+        // Extraction: ON in dev, OFF in prod/staging (unless overridden)
+        extractionEnabled: process.env.EXTRACTION_ENABLED === 'true' || (env === 'development'),
+
+        // Widget: ON in dev, LIMITED in staging, OFF in prod (auto-features)
+        widgetAutoFeatures: process.env.WIDGET_ENABLED === 'true' || (env === 'development')
+    },
+
+    // 4. Rate Limiting (Windows in ms)
+    rateLimits: {
+        widget: {
+            chat: { windowMs: 60 * 1000, max: 60 }, // 60 per min
+            extraction: { windowMs: 24 * 60 * 60 * 1000, max: 5 }, // 5 per day
+        },
+        admin: {
+            actions: { windowMs: 60 * 1000, max: 30 }, // 30 per min
+            auth: { windowMs: 60 * 60 * 1000, max: 20 } // 20 per hour (login attempts)
+        },
+        system: {
+            health: { windowMs: 60 * 1000, max: 100 } // High limit for monitoring
+        }
+    },
+
+    // 5. Logging Levels
+    logging: {
+        development: 'verbose',
+        staging: 'info',
+        production: 'warn'
+    }[env]
+};
+
+// Log Configuration (Sanitized)
+const sanitizedSettings = { ...settings, db: { ...settings.db, password: '***' } };
+console.log("⚙️  Active Configuration:", JSON.stringify(sanitizedSettings, null, 2));
+
+module.exports = settings;

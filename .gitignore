@@ -28,3 +28,12 @@ yarn-error.log*
 .vscode
 *.swp
 *.swo
+
+# Deploy Keys
+github_actions_ed25519
+github_actions_ed25519.pub
+
+# Logs & Backups
+server_*.log
+backups/
+*.log

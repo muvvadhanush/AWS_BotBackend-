@@ -1,19 +1,17 @@
 const { Sequelize } = require("sequelize");
+const settings = require("./settings");
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || process.env.database,
-  process.env.DB_USER || process.env.user,
-  process.env.DB_PASSWORD || process.env.password,
+  settings.db.database,
+  settings.db.username,
+  settings.db.password,
   {
-    host: process.env.DB_HOST || process.env.db_host || "localhost",
-    dialect: "postgres",
-    port: process.env.DB_PORT || process.env.port || 5432,
-    logging: false,
+    host: settings.db.host,
+    dialect: settings.db.dialect,
+    port: settings.db.port,
+    logging: settings.logging === 'verbose' ? console.log : false,
     dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
+      ssl: settings.db.ssl
     }
   }
 );

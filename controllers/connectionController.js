@@ -48,16 +48,33 @@ exports.ingestKnowledge = async (req, res) => {
             console.warn(`⚠️ Knowledge Ingestion Failed [${connectionId}]:`, e.message);
         }
 
-        // 3. Persist to DB
-        const record = await ConnectionKnowledge.create({
-            connectionId,
-            sourceType,
-            sourceValue: sourceValue,
-            rawText: ingestResult ? ingestResult.rawText : null,
-            cleanedText: ingestResult ? ingestResult.cleanedText : null,
-            status: status,
-            metadata: errorMessage ? { error: errorMessage } : {}
+        // Compute Hash (Phase 3.2)
+        const crypto = require("crypto");
+        const contentHash = ingestResult ? crypto.createHash('sha256').update(ingestResult.cleanedText || "").digest('hex') : null;
+
+        // 3. Persist to DB (Idempotent)
+        const [record, created] = await ConnectionKnowledge.findOrCreate({
+            where: { connectionId, sourceType, sourceValue },
+            defaults: {
+                rawText: ingestResult ? ingestResult.rawText : null,
+                cleanedText: ingestResult ? ingestResult.cleanedText : null,
+                contentHash,
+                status: status,
+                metadata: errorMessage ? { error: errorMessage } : {},
+                lastCheckedAt: new Date()
+            }
         });
+
+        if (!created && status === 'READY') {
+            await record.update({
+                rawText: ingestResult ? ingestResult.rawText : null,
+                cleanedText: ingestResult ? ingestResult.cleanedText : null,
+                contentHash,
+                status: status,
+                metadata: errorMessage ? { error: errorMessage } : {},
+                lastCheckedAt: new Date()
+            });
+        }
 
         res.status(status === 'FAILED' ? 422 : 201).json({
             success: status === 'READY',

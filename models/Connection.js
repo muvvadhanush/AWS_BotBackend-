@@ -172,7 +172,12 @@ const Connection = sequelize.define("Connection", {
     type: DataTypes.DATE,
     allowNull: true
   },
-  // --- End Phase 1 ---
+
+  // Phase 3.3: Policy-Driven AI
+  policies: {
+    type: DataTypes.JSON,
+    defaultValue: [] // Array of policy strings
+  }
 });
 
 module.exports = Connection;
