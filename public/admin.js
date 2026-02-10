@@ -3,8 +3,10 @@ const API_BASE = '/api/v1/connections';
 const connectionsList = document.getElementById('connectionsList');
 const wizardModal = document.getElementById('connectionWizard');
 const toastEl = document.getElementById('toast');
+const searchInput = document.getElementById('globalSearch');
 
-// Wizard State
+// State
+let connectionsData = [];
 let currentStep = 1;
 const TOTAL_STEPS = 4;
 let wizardData = {};
@@ -14,21 +16,24 @@ let isEditMode = false;
 document.addEventListener('DOMContentLoaded', () => {
     loadConnections();
     setupWizardEvents();
+    setupSearch();
     checkHealth();
 });
 
-// --- THEME ---
-const themeToggle = document.getElementById('themeToggle');
-themeToggle.addEventListener('click', () => {
-    const isLight = document.body.getAttribute('data-theme') === 'light';
-    if (isLight) {
-        document.body.removeAttribute('data-theme');
-    } else {
-        document.body.setAttribute('data-theme', 'light');
-    }
-});
+// --- SEARCH ---
+function setupSearch() {
+    if (!searchInput) return;
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = connectionsData.filter(c =>
+            (c.websiteName && c.websiteName.toLowerCase().includes(term)) ||
+            (c.connectionId && c.connectionId.toLowerCase().includes(term))
+        );
+        renderConnections(filtered);
+    });
+}
 
-// --- CONNECTIONS GRID ---
+// --- CONNECTIONS ---
 async function loadConnections() {
     try {
         const res = await fetch(`${API_BASE}/list`);
@@ -36,55 +41,58 @@ async function loadConnections() {
 
         if (!res.ok) throw new Error(data.error);
 
-        connectionsList.innerHTML = '';
+        connectionsData = data; // Store for search
+        renderConnections(data);
 
-        if (data.length === 0) {
-            connectionsList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">No connections found. Create one!</div>';
-            return;
-        }
-
-        data.forEach(conn => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div class="card-header">
-                    <div class="row" style="align-items: center; gap: 1rem;">
-                        <div class="robot-avatar">🤖</div>
-                        <div>
-                            <div class="card-title">${conn.websiteName || 'Untitled Connection'}</div>
-                            <div class="card-subtitle">${conn.connectionId}</div>
-                        </div>
-                    </div>
-                    <span class="ai-badge">AI Assistant</span>
-                </div>
-                
-                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    Created: ${new Date(conn.createdAt).toLocaleDateString()}
-                </div>
-
-                <div class="card-actions">
-                    <button class="btn secondary" onclick="editConnection('${conn.connectionId}')">Edit</button>
-                    <button class="btn danger" onclick="deleteConnection('${conn.connectionId}')">Delete</button>
-                </div>
-            `;
-            connectionsList.appendChild(card);
-        });
+        // Update Focus Widget (Mock Logic for now, can be real later)
+        // updateFocusWidgets(data); 
 
     } catch (err) {
         showToast('Failed to load connections: ' + err.message, true);
     }
 }
 
-// --- GLOBAL ACTIONS ---
-window.deleteConnection = async (id) => {
-    if (!confirm(`Are you sure you want to delete ${id}? This cannot be undone.`)) return;
+function renderConnections(data) {
+    connectionsList.innerHTML = '';
 
+    if (data.length === 0) {
+        connectionsList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">No connections found.</div>';
+        return;
+    }
+
+    data.forEach(conn => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="robot-avatar">🤖</div>
+                    <div>
+                        <div class="card-title">${conn.websiteName || 'Untitled'}</div>
+                        <div class="card-subtitle">${conn.connectionId}</div>
+                    </div>
+                </div>
+                <span class="ai-badge">AI Assistant</span>
+            </div>
+            
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Created: ${new Date(conn.createdAt).toLocaleDateString()}
+            </div>
+
+            <div class="card-actions">
+                <button class="btn secondary" onclick="editConnection('${conn.connectionId}')">Edit</button>
+                <button class="btn btn-danger-outline" onclick="deleteConnection('${conn.connectionId}')">Delete</button>
+            </div>
+        `;
+        connectionsList.appendChild(card);
+    });
+}
+
+// --- ACTIONS ---
+window.deleteConnection = async (id) => {
+    if (!confirm(`Are you sure you want to delete ${id}?`)) return;
     try {
-        // Assuming DELETE endpoint exists, if not we might need to verify routes
-        // PR-1 didn't explicitly mention DELETE /connections/:id but standard REST implies it.
-        // Let's assume it exists or I'll need to add it.
-        // connectionRoutes.js usually has it.
-        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' }); // Verify this
+        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
         if (res.ok) {
             showToast('Connection deleted');
             loadConnections();
@@ -99,55 +107,53 @@ window.deleteConnection = async (id) => {
 window.editConnection = async (id) => {
     try {
         const res = await fetch(`${API_BASE}/${id}/details`);
-        if (!res.ok) throw new Error('Failed to fetch details');
-
+        if (!res.ok) throw new Error('Fetch details failed');
         const data = await res.json();
 
         isEditMode = true;
-        wizardModal.classList.add('active');
-        currentStep = 1;
-        updateWizardUI();
+        openWizard(); // Reset handled inside
 
-        // Populate Form
+        // Override for Edit
         document.getElementById('connectionId').value = data.connectionId;
-        document.getElementById('connectionId').readOnly = true; // Lock ID
+        document.getElementById('connectionId').readOnly = true;
         document.getElementById('websiteName').value = data.websiteName || '';
         document.getElementById('websiteUrl').value = data.websiteUrl || '';
 
-        // Populate Behavior
         if (data.behaviorProfile) {
-            document.getElementById('formalitySlider').value = data.behaviorProfile.tone === 'formal' ? 80 : 20;
-            document.getElementById('salesSlider').value = (data.behaviorProfile.salesIntensity || 0.4) * 100;
+            const fSlider = document.getElementById('formalitySlider');
+            const sSlider = document.getElementById('salesSlider');
+            if (fSlider) fSlider.value = data.behaviorProfile.tone === 'formal' ? 80 : 20;
+            if (sSlider) sSlider.value = (data.behaviorProfile.salesIntensity || 0.4) * 100;
         }
-
     } catch (err) {
         showToast(err.message, true);
     }
 };
 
-// --- WIZARD LOGIC ---
+// --- WIZARD ---
 function setupWizardEvents() {
-    document.getElementById('newConnectionBtn').addEventListener('click', openWizard);
+    const newBtn = document.getElementById('newConnectionBtn'); // FAB
+    if (newBtn) newBtn.addEventListener('click', () => { isEditMode = false; openWizard(); });
+
+    // Header button if it existed (removed in new layout but good safety)
+    // document.getElementById('newConnectionBtnHeader')?.addEventListener('click', ...);
+
     document.getElementById('cancelBtn').addEventListener('click', closeWizard);
     document.getElementById('nextBtn').addEventListener('click', nextStep);
     document.getElementById('prevBtn').addEventListener('click', prevStep);
-
-    // Sliders
-    setupSlider('formalitySlider', 'formalityVal', ['Casual', 'Neutral', 'Professional']);
-    setupSlider('empathySlider', 'empathyVal', ['None', 'Moderate', 'High']);
-    setupSlider('salesSlider', 'salesVal', ['Info', 'Persuasive', 'Aggressive']);
 }
 
 function openWizard() {
-    isEditMode = false;
     wizardModal.classList.add('active');
     currentStep = 1;
     updateWizardUI();
-    // Reset form
-    document.getElementById('wizardForm').reset();
-    document.getElementById('connectionId').readOnly = false;
-    document.getElementById('connectionId').value = 'conn_' + Date.now();
-    document.getElementById('connectionSecret').value = Math.random().toString(36).substring(7);
+
+    // Reset if New
+    if (!isEditMode) {
+        document.getElementById('wizardForm').reset();
+        document.getElementById('connectionId').readOnly = false;
+        document.getElementById('connectionId').value = 'conn_' + Date.now();
+    }
 }
 
 function closeWizard() {
@@ -158,12 +164,17 @@ async function nextStep() {
     if (!validateStep(currentStep)) return;
 
     if (currentStep < TOTAL_STEPS) {
-        collectStepData(currentStep);
+        // Collect Data if needed per step
+        if (currentStep === 1) {
+            wizardData.connectionId = document.getElementById('connectionId').value;
+            wizardData.websiteName = document.getElementById('websiteName').value;
+            wizardData.websiteUrl = document.getElementById('websiteUrl').value;
+        }
 
-        // If moving to Deployment (4), SAVE the connection
+        // Save on Step 3 (before Deploy step 4)
         if (currentStep === 3) {
             const success = await saveConnection();
-            if (!success) return; // Stop if save failed
+            if (!success) return;
         }
 
         currentStep++;
@@ -182,12 +193,12 @@ function prevStep() {
 }
 
 function updateWizardUI() {
-    // Steps Header
+    // Steps
     document.querySelectorAll('.step').forEach(el => {
         const stepNum = parseInt(el.dataset.step);
-        el.classList.remove('active', 'completed');
+        el.classList.remove('active');
         if (stepNum === currentStep) el.classList.add('active');
-        if (stepNum < currentStep) el.classList.add('completed');
+        // Completed styling could be added via CSS
     });
 
     // Panels
@@ -203,7 +214,7 @@ function updateWizardUI() {
     if (currentStep === TOTAL_STEPS) {
         nextBtn.textContent = 'Finish';
     } else if (currentStep === 3) {
-        nextBtn.textContent = isEditMode ? 'Update Connection' : 'Create & Deploy';
+        nextBtn.textContent = isEditMode ? 'Update' : 'Create & Deploy';
     } else {
         nextBtn.textContent = 'Next';
     }
@@ -211,8 +222,7 @@ function updateWizardUI() {
 
 function validateStep(step) {
     if (step === 1) {
-        const id = document.getElementById('connectionId').value;
-        if (!id) {
+        if (!document.getElementById('connectionId').value) {
             showToast('Connection ID is required', true);
             return false;
         }
@@ -220,17 +230,9 @@ function validateStep(step) {
     return true;
 }
 
-function collectStepData(step) {
-    if (step === 1) {
-        wizardData.connectionId = document.getElementById('connectionId').value;
-        wizardData.websiteName = document.getElementById('websiteName').value;
-        wizardData.websiteUrl = document.getElementById('websiteUrl').value;
-    }
-}
-
 async function saveConnection() {
     const payload = {
-        connectionId: wizardData.connectionId, // used for create
+        connectionId: wizardData.connectionId,
         websiteName: wizardData.websiteName,
         websiteUrl: wizardData.websiteUrl,
         behaviorProfile: {
@@ -239,14 +241,9 @@ async function saveConnection() {
         }
     };
 
-    // Only send secret on creation
-    if (!isEditMode) {
-        payload.connectionSecret = document.getElementById('connectionSecret').value;
-    }
-
     try {
         const url = isEditMode ? `${API_BASE}/${wizardData.connectionId}` : `${API_BASE}/create`;
-        const method = isEditMode ? 'PUT' : 'POST'; // Assuming PUT exists for update
+        const method = isEditMode ? 'PUT' : 'POST';
 
         const res = await fetch(url, {
             method: method,
@@ -255,12 +252,12 @@ async function saveConnection() {
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Operation failed');
+        if (!res.ok) throw new Error(data.error || 'Failed');
 
-        // Populate embed code
+        // Populate Deploy Script
         const script = `<script src="http://${location.hostname}:5000/widget.js?id=${wizardData.connectionId}"></script>`;
         document.getElementById('embedCode').value = script;
-        showToast(isEditMode ? 'Connection Updated!' : 'Connection Created Successfully!');
+        showToast(isEditMode ? 'Updated!' : 'Created!');
         return true;
     } catch (err) {
         showToast(err.message, true);
@@ -269,27 +266,19 @@ async function saveConnection() {
 }
 
 // --- UTILS ---
-function setupSlider(id, valId, labels) {
-    const slider = document.getElementById(id);
-    const valDisplay = document.getElementById(valId);
-    if (!slider || !valDisplay) return;
-
-    slider.addEventListener('input', (e) => {
-        const val = e.target.value;
-        let label = labels[1];
-        if (val < 33) label = labels[0];
-        if (val > 66) label = labels[2];
-        valDisplay.textContent = label;
-    });
-}
-
 function showToast(msg, isError = false) {
-    if (!toastEl) return;
     toastEl.textContent = msg;
-    toastEl.style.borderLeft = isError ? '4px solid var(--danger)' : '4px solid var(--success)';
-    toastEl.classList.remove('hidden');
-    setTimeout(() => toastEl.classList.add('hidden'), 3000);
+    toastEl.style.borderLeftColor = isError ? 'var(--error)' : 'var(--success)';
+    toastEl.classList.add('active');
+    setTimeout(() => toastEl.classList.remove('active'), 3000);
 }
+
+window.copyEmbed = () => {
+    const copyText = document.getElementById("embedCode");
+    copyText.select();
+    document.execCommand("copy");
+    showToast("Copied to clipboard!");
+};
 
 function checkHealth() {
     fetch('/health')
@@ -298,7 +287,7 @@ function checkHealth() {
             const h = document.getElementById('healthStatus');
             if (h) {
                 h.querySelector('.status-text').textContent = 'Backend Online';
-                h.classList.add('online');
+                h.classList.remove('offline');
             }
         })
         .catch(() => {
@@ -309,10 +298,3 @@ function checkHealth() {
             }
         });
 }
-
-window.copyEmbed = () => {
-    const copyText = document.getElementById("embedCode");
-    copyText.select();
-    document.execCommand("copy");
-    showToast("Copied to clipboard!");
-};
