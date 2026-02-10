@@ -1,5 +1,5 @@
 
-const API_BASE = '/api/connections';
+const API_BASE = '/api/v1/connections';
 const connectionsList = document.getElementById('connectionsList');
 const modal = document.getElementById('connectionModal');
 const form = document.getElementById('connectionForm');
