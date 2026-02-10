@@ -203,7 +203,12 @@ function updateWizardUI() {
 
     // Panels
     document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
-    document.getElementById(`step${currentStep}`).classList.add('active');
+    const panel = document.getElementById(`step${currentStep}`);
+    if (panel) {
+        panel.classList.add('active');
+    } else {
+        console.error(`Wizard panel step${currentStep} not found!`);
+    }
 
     // Buttons
     const prevBtn = document.getElementById('prevBtn');
