@@ -6,7 +6,7 @@ const chatRoutes = require("../chatRoutes");
 const connectionRoutes = require("../connectionRoutes"); // Connection mgmt & extraction
 const widgetRoutes = require("../widgetRoutes");
 const adminRoutes = require("../adminRoutes");
-const ideaRoutes = require("../ideaRoutes");
+// const ideaRoutes = require("../ideaRoutes"); // Removed
 
 // 1. Widget / Public Routes (High Volume)
 // Apply Chat Rate Limit to Chat & Widget endpoints
@@ -16,8 +16,7 @@ router.use("/widget", limiters.widgetChat, widgetRoutes); // Widget loads, etc.
 // 2. Admin Routes (Sensitive)
 router.use("/admin", limiters.adminActions, adminRoutes);
 
-// 3. Ideas (User Submission) - Treat as Widget traffic for now
-router.use("/ideas", limiters.widgetChat, ideaRoutes); // Ideas are submitted via widget
+// 3. Ideas Removed
 
 // 4. Connection Management (Mixed)
 // Some endpoints are admin (listing), some are widget (extraction)

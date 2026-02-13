@@ -1,4 +1,4 @@
-const ideaService = require("./ideaService");
+// const ideaService = require("./ideaService"); // Removed
 
 /**
  * Generic Action Service
@@ -8,9 +8,9 @@ class ActionService {
 
     /**
      * Execute the configured action for a completed flow.
-     * @param {object} actionConfig - { type: "WEBHOOK"|"SAVE"|"EMAIL"|"NONE", config: {} }
-     * @param {object} payload - The data to process { title, description, impactedUsers, ... }
-     * @param {object} permissions - (Optional) { actions: ["SAVE", ...] } used for enforcement
+     * @param {object} actionConfig - { type: "WEBHOOK"|"EMAIL"|"NONE", config: {} }
+     * @param {object} payload - The data to process
+     * @param {object} permissions - (Optional) { actions: ["WEBHOOK", ...] } used for enforcement
      * @returns {object} result - { success: true/false, message: "..." }
      */
     async executeAction(actionConfig, payload, permissions = null) {
@@ -30,10 +30,7 @@ class ActionService {
                 case "WEBHOOK":
                     return await this.handleWebhook(config, payload);
 
-                case "SAVE":
-                    // Legacy support / Default: Save to Ideas table
-                    // We assume payload maps to Idea model fields
-                    return await this.handleSave(payload);
+                // case "SAVE": // Removed Idea Save Logic
 
                 case "EMAIL":
                     return await this.handleEmail(config, payload);
@@ -73,10 +70,7 @@ class ActionService {
         return { success: true, message: "Webhook sent successfully." };
     }
 
-    async handleSave(payload) {
-        const result = await ideaService.submitIdea(payload);
-        return { success: true, message: "Saved to database.", data: result };
-    }
+    // handleSave removed
 
     async handleEmail(config, payload) {
         console.log("📧 [STUB] Sending Email to:", config?.email || "admin@example.com");

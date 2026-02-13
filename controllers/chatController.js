@@ -1,7 +1,6 @@
 const ChatSession = require("../models/ChatSession");
 const Connection = require("../models/Connection");
-const ConnectionKnowledge = require("../models/ConnectionKnowledge"); // Added missing import
-const Idea = require("../models/Idea");
+const ConnectionKnowledge = require("../models/ConnectionKnowledge");
 const aiService = require("../services/aiservice");
 const actionService = require("../services/actionService");
 const promptService = require("../services/promptService");
@@ -12,7 +11,7 @@ const sendReply = (res, message, suggestions = [], aiMetadata = null, messageInd
     messages: [{ role: "assistant", text: message }],
     suggestions,
     ai_metadata: aiMetadata,
-    messageIndex // Added index
+    messageIndex
   });
 };
 
@@ -34,7 +33,7 @@ exports.sendMessage = async (req, res) => {
         messages: [],
         currentStep: 'NONE',
         tempData: {},
-        mode: 'FREE_CHAT' // Default mode
+        mode: 'FREE_CHAT'
       });
     }
 
@@ -44,7 +43,7 @@ exports.sendMessage = async (req, res) => {
       try { tempData = JSON.parse(tempData); } catch (e) { tempData = {}; }
     }
 
-    // Ensure session.mode is valid (fallback)
+    // Ensure session.mode is valid
     if (!session.mode) session.mode = 'FREE_CHAT';
 
     let response = { text: "", suggestions: [], ai_metadata: null };
@@ -52,311 +51,139 @@ exports.sendMessage = async (req, res) => {
 
     console.log(`[${session.mode}] Step: ${session.currentStep} | Input: "${message}"`);
 
-    // --- MODE SWITCHING LOGIC --- //
+    // --- EXECUTE FREE CHAT LOGIC DIRECTLY ---
+    let history = session.messages || [];
+    if (typeof history === 'string') try { history = JSON.parse(history); } catch (e) { history = []; }
 
-    // Check Trigger to ENTER Guided Flow
-    if (session.mode === 'FREE_CHAT') {
-      const lower = message.toLowerCase();
-      if (lower.includes("submit idea") || lower.includes("new idea") || lower.includes("start submission")) {
+    // --- PERMISSION CHECK: AI ENABLED ---
+    const connectionObj = await Connection.findOne({ where: { connectionId } });
+    const perms = connectionObj ? connectionObj.permissions : null;
 
-        // --- PERMISSION CHECK: GUIDED FLOW ---
-        const connectionObj = await Connection.findOne({ where: { connectionId } });
-        const perms = connectionObj ? connectionObj.permissions : null;
-        let allowedModes = ["FREE_CHAT"];
+    let permsObj = perms;
+    if (typeof perms === 'string') {
+      try { permsObj = JSON.parse(perms); } catch (e) { permsObj = {}; }
+    }
 
-        // Handle JSON string vs Object
-        let permsObj = perms;
-        if (typeof perms === 'string') {
-          try { permsObj = JSON.parse(perms); } catch (e) { permsObj = {}; }
-        }
+    let aiEnabled = true; // Default
+    if (permsObj && typeof permsObj.aiEnabled !== 'undefined') {
+      aiEnabled = permsObj.aiEnabled;
+    }
 
-        if (permsObj && permsObj.modes) {
-          allowedModes = permsObj.modes;
-        }
+    console.log(`[DEBUG] Connection: ${connectionId} | AI Enabled: ${aiEnabled}`);
 
-        if (allowedModes.includes("GUIDED_FLOW")) {
-          console.log("🔀 Switching to GUIDED_FLOW");
-          session.mode = 'GUIDED_FLOW';
-          session.currentStep = 'NONE'; // Reset step
-          // Fall through to Guided Flow logic below
-        } else {
-          console.log("⛔ Access Denied: GUIDED_FLOW not allowed.");
-          response.text = "I'm sorry, but Idea Submission is not enabled for this connection.";
-          return sendReply(res, response.text);
-        }
+    let aiReply = "I'm listening.";
+    if (aiEnabled === true || aiEnabled === "true") {
 
+      // --- STEP 1: PROMPT ASSEMBLY ---
+      const assembledPrompt = await promptService.assemblePrompt(connectionId, url, "");
+
+      const aiOutput = await aiService.freeChat({
+        message,
+        history,
+        connectionId,
+        systemPrompt: assembledPrompt
+      });
+
+      // Handle Object return
+      if (typeof aiOutput === 'object' && aiOutput.reply) {
+        aiReply = aiOutput.reply;
+        response.ai_metadata = { sources: aiOutput.sources };
       } else {
-        // STAY IN FREE CHAT
-        let history = session.messages || [];
-        if (typeof history === 'string') try { history = JSON.parse(history); } catch (e) { history = []; }
+        aiReply = aiOutput;
+      }
+    } else {
+      console.log("⛔ AI Chat Blocked.");
+      aiReply = "AI Chat is disabled.";
+    }
 
-        // --- PERMISSION CHECK: AI ENABLED ---
-        const connectionObj = await Connection.findOne({ where: { connectionId } });
-        const perms = connectionObj ? connectionObj.permissions : null;
+    response.text = aiReply;
 
-        let permsObj = perms;
-        if (typeof perms === 'string') {
-          try { permsObj = JSON.parse(perms); } catch (e) { permsObj = {}; }
-        }
+    // Enrich ai_metadata for behavior metrics
+    const salesPatterns = ['buy now', 'sign up', 'get started', 'free trial', 'book a demo', 'schedule a call', 'contact sales', 'pricing', 'upgrade', 'subscribe'];
+    const replyLower = (response.text || '').toLowerCase();
+    const wordCount = (response.text || '').split(/\s+/).filter(w => w).length;
+    const salesTriggerDetected = salesPatterns.some(p => replyLower.includes(p));
 
-        let aiEnabled = true; // Default
-        if (permsObj && typeof permsObj.aiEnabled !== 'undefined') {
-          aiEnabled = permsObj.aiEnabled;
-        }
-
-        console.log(`[DEBUG] Connection: ${connectionId} | AI Enabled: ${aiEnabled}`);
-
-        let aiReply = "I'm listening.";
-        if (aiEnabled === true || aiEnabled === "true") {
-
-          // --- STEP 1: WEBSITE BEHAVIOR ENGINE (PROMPT ASSEMBLY) ---
-          // Phase 2 Update: Pass empty context to promptService, let aiService handle RAG
-          const assembledPrompt = await promptService.assemblePrompt(connectionId, url, "");
-
-          const aiOutput = await aiService.freeChat({
-            message,
-            history,
-            connectionId, // Pass connectionId for Shadow/Active retrieval
-            systemPrompt: assembledPrompt
-          });
-
-          // Handle Object return (Phase 2.3)
-          if (typeof aiOutput === 'object' && aiOutput.reply) {
-            aiReply = aiOutput.reply;
-            response.ai_metadata = { sources: aiOutput.sources };
-            console.log("[DEBUG] Controller set metadata:", JSON.stringify(response.ai_metadata));
-          } else {
-            aiReply = aiOutput;
-          }
-        } else {
-          console.log("⛔ AI Chat Blocked.");
-          aiReply = "AI Chat is disabled. Please type 'submit idea' to start a form (if allowed).";
-        }
-
-        response.text = aiReply;
-
-        // Enrich ai_metadata for behavior metrics
-        const salesPatterns = ['buy now', 'sign up', 'get started', 'free trial', 'book a demo', 'schedule a call', 'contact sales', 'pricing', 'upgrade', 'subscribe'];
-        const replyLower = (response.text || '').toLowerCase();
-        const wordCount = (response.text || '').split(/\s+/).filter(w => w).length;
-        const salesTriggerDetected = salesPatterns.some(p => replyLower.includes(p));
-
-        // Compute aggregate confidence from sources
-        let aggConfidence = null;
-        if (response.ai_metadata && response.ai_metadata.sources) {
-          const scores = response.ai_metadata.sources
-            .filter(s => s.confidenceScore !== undefined)
-            .map(s => s.confidenceScore);
-          if (scores.length > 0) {
-            aggConfidence = scores.reduce((a, b) => a + b, 0) / scores.length;
-          }
-        }
-
-        response.ai_metadata = {
-          ...(response.ai_metadata || {}),
-          responseLength: wordCount,
-          salesTriggerDetected,
-          confidenceScore: aggConfidence
-        };
-
-        // ─── CONFIDENCE GATING ─────────────────────────────────
-        const ConfidencePolicy = require('../models/ConfidencePolicy');
-        let gated = false;
-        let gateReason = null;
-        try {
-          const policy = await ConfidencePolicy.findOne({ where: { connectionId } });
-          if (policy) {
-            const sourceCount = (response.ai_metadata && response.ai_metadata.sources)
-              ? response.ai_metadata.sources.length : 0;
-            const conf = aggConfidence !== null ? aggConfidence : 1;
-
-            const belowConfidence = conf < policy.minAnswerConfidence;
-            const belowSources = sourceCount < policy.minSourceCount;
-
-            if (belowConfidence || belowSources) {
-              gated = true;
-              gateReason = belowConfidence
-                ? `Confidence ${(conf * 100).toFixed(0)}% below ${(policy.minAnswerConfidence * 100).toFixed(0)}% threshold`
-                : `Only ${sourceCount} source(s), need ${policy.minSourceCount}`;
-
-              const originalAnswer = response.text;
-              response.ai_metadata.gated = true;
-              response.ai_metadata.gateReason = gateReason;
-              response.ai_metadata.originalAnswer = originalAnswer;
-
-              switch (policy.lowConfidenceAction) {
-                case 'REFUSE':
-                  response.text = "I'm not fully confident in that answer yet. Let me double-check or connect you with support.";
-                  break;
-                case 'CLARIFY':
-                  response.text = "I need a bit more detail to answer accurately. Could you rephrase or provide more context?";
-                  break;
-                case 'ESCALATE':
-                  response.text = "I'm not confident enough to answer that reliably. Would you like me to connect you to a human agent?";
-                  break;
-                case 'SOFT_ANSWER':
-                default:
-                  response.text = "⚠️ This may not be fully accurate, but based on available information: " + originalAnswer;
-                  break;
-              }
-              console.log(`[GATE] Response gated for ${connectionId}: ${gateReason} → ${policy.lowConfidenceAction}`);
-            }
-          }
-        } catch (gateErr) {
-          console.error('[GATE] Policy check error:', gateErr.message);
-        }
-        // ─── END CONFIDENCE GATING ─────────────────────────────
-
-        // Save history
-        history.push({ role: "user", text: message });
-        history.push({
-          role: "assistant",
-          text: response.text,
-          ai_metadata: response.ai_metadata || null
-        });
-        session.messages = history;
-        session.changed('messages', true);
-        await session.save();
-
-        return sendReply(res, response.text);
+    // Compute aggregate confidence from sources
+    let aggConfidence = null;
+    if (response.ai_metadata && response.ai_metadata.sources) {
+      const scores = response.ai_metadata.sources
+        .filter(s => s.confidenceScore !== undefined)
+        .map(s => s.confidenceScore);
+      if (scores.length > 0) {
+        aggConfidence = scores.reduce((a, b) => a + b, 0) / scores.length;
       }
     }
 
-    // Check Trigger to EXIT Guided Flow
-    if (session.mode === 'GUIDED_FLOW') {
-      const lower = message.toLowerCase();
-      if (lower === "cancel" || lower === "exit" || lower === "stop") {
-        console.log("🔀 Switching to FREE_CHAT (User Cancel)");
-        session.mode = 'FREE_CHAT';
-        session.currentStep = 'NONE';
-        session.tempData = {};
+    response.ai_metadata = {
+      ...(response.ai_metadata || {}),
+      responseLength: wordCount,
+      salesTriggerDetected,
+      confidenceScore: aggConfidence
+    };
 
-        response.text = "Cancelled. You are back in free chat.";
+    // ─── CONFIDENCE GATING ─────────────────────────────────
+    const ConfidencePolicy = require('../models/ConfidencePolicy');
+    let gated = false;
+    let gateReason = null;
+    try {
+      const policy = await ConfidencePolicy.findOne({ where: { connectionId } });
+      if (policy) {
+        const sourceCount = (response.ai_metadata && response.ai_metadata.sources)
+          ? response.ai_metadata.sources.length : 0;
+        const conf = aggConfidence !== null ? aggConfidence : 1;
 
-        // Save transition
-        session.currentStep = 'NONE';
-        session.changed('tempData', true);
-        await session.save();
+        const belowConfidence = conf < policy.minAnswerConfidence;
+        const belowSources = sourceCount < policy.minSourceCount;
 
-        // Note: Cancel doesn't push to messages array in this block? 
-        // Wait, lines 164-166 only update step/data.
-        // It DOES NOT push the "Cancelled" message to history?
-        // Logic seems to miss saving the "Cancelled" reply to history in this specific block?
-        // Actually, let's fix that too or just pass -1 if not saved.
-        // If not saved, we can't rate it.
-        return sendReply(res, response.text, response.suggestions || [], response.ai_metadata, -1);
-      }
-    }
+        if (belowConfidence || belowSources) {
+          gated = true;
+          gateReason = belowConfidence
+            ? `Confidence ${(conf * 100).toFixed(0)}% below ${(policy.minAnswerConfidence * 100).toFixed(0)}% threshold`
+            : `Only ${sourceCount} source(s), need ${policy.minSourceCount}`;
 
-    // --- STATE MACHINE (GUIDED_FLOW) --- //
+          const originalAnswer = response.text;
+          response.ai_metadata.gated = true;
+          response.ai_metadata.gateReason = gateReason;
+          response.ai_metadata.originalAnswer = originalAnswer;
 
-    switch (session.currentStep) {
-      case 'NONE':
-        response.text = "Hi! Let's submit a new idea. What is the short TITLE of your idea?";
-        nextStep = 'TITLE';
-        break;
-
-      case 'TITLE':
-        if (message.length < 3 || /^\d+$/.test(message)) {
-          response.text = "That title seems too short or invalid. Please provide a clear, short title (e.g. 'New Dashboard Widget').";
-        } else {
-          tempData.title = message;
-          const ai = await aiService.suggestTitles(message);
-          response.ai_metadata = ai;
-          response.text = `Got it: "${message}".\n\nNow, please describe the idea in detail (at least 10 characters).`;
-          nextStep = 'DESCRIPTION';
-        }
-        break;
-
-      case 'DESCRIPTION':
-        if (message.length < 10) {
-          response.text = "Please provide a bit more detail (at least 10 characters) so we can understand the idea.";
-        } else {
-          const aiEnhance = await aiService.enhanceDescription(message);
-          const aiImpact = await aiService.predictImpact(message);
-          tempData.description = message;
-          response.ai_metadata = { ...aiEnhance, ...aiImpact };
-          response.text = "Great description. Finally, roughly how many users will this impact? (e.g. '50', 'All users', 'Admin team')";
-          response.suggestions = ["10-50", "100+", "All Users"];
-          if (aiImpact.confidence !== 'low' && aiImpact.predicted_impact > 0) {
-            response.suggestions.unshift(`${aiImpact.predicted_impact} (AI Est)`);
+          switch (policy.lowConfidenceAction) {
+            case 'REFUSE':
+              response.text = "I'm not fully confident in that answer yet. Let me double-check or connect you with support.";
+              break;
+            case 'CLARIFY':
+              response.text = "I need a bit more detail to answer accurately. Could you rephrase or provide more context?";
+              break;
+            case 'ESCALATE':
+              response.text = "I'm not confident enough to answer that reliably. Would you like me to connect you to a human agent?";
+              break;
+            case 'SOFT_ANSWER':
+            default:
+              response.text = "⚠️ This may not be fully accurate, but based on available information: " + originalAnswer;
+              break;
           }
-          nextStep = 'IMPACT';
+          console.log(`[GATE] Response gated for ${connectionId}: ${gateReason} → ${policy.lowConfidenceAction}`);
         }
-        break;
-
-      case 'IMPACT':
-        const match = message.match(/(\d+)/);
-        const num = match ? parseInt(match[0], 10) : 0;
-        if (num === 0 && !/\d/.test(message) && !message.toLowerCase().includes('all')) {
-          response.text = "I couldn't understand the number of users. Please type a number or estimate (e.g. '50').";
-          response.suggestions = ["50", "100", "500"];
-        } else {
-          tempData.impactedUsers = num > 0 ? num : 0;
-          response.text = `Summary:\n- Title: ${tempData.title}\n- Desc: ${tempData.description}\n- Impact: ~${tempData.impactedUsers} users\n\nReady to submit?`;
-          response.suggestions = ["Yes, Submit", "No, Restart"];
-          nextStep = 'CONFIRM';
-        }
-        break;
-
-      case 'CONFIRM':
-        const confLower = message.toLowerCase();
-        if (confLower.includes("yes") || confLower.includes("submit") || confLower.includes("confirm")) {
-          const connectionObj = await Connection.findOne({ where: { connectionId } });
-          const actionConfig = (connectionObj && connectionObj.actionConfig)
-            ? connectionObj.actionConfig
-            : { type: "SAVE", config: { target: "ideas_table" } };
-
-          const payload = {
-            title: tempData.title,
-            description: tempData.description,
-            impact: tempData.impactedUsers,
-            connectionId: connectionId,
-            sessionId: sessionId
-          };
-
-          const result = await actionService.executeAction(actionConfig, payload, connectionObj ? connectionObj.permissions : null);
-          const refText = result.data && result.data.ideaId ? ` Reference ID: ${result.data.ideaId}.` : "";
-          response.text = `✅ ${result.message}${refText}\n\nReturning to free chat.`;
-          nextStep = 'SUBMITTED';
-          session.mode = 'FREE_CHAT';
-        } else if (confLower.includes("no") || confLower.includes("restart")) {
-          tempData = {};
-          response.text = "Cancelled. Let's start over. What is the title?";
-          nextStep = 'TITLE';
-        } else {
-          response.text = "Please type 'Yes' to submit or 'No' to cancel.";
-          response.suggestions = ["Yes, Submit", "No, Cancel"];
-        }
-        break;
-
-      case 'SUBMITTED':
-        session.mode = 'FREE_CHAT';
-        tempData = {};
-        response.text = "You are back in free chat. Type 'submit idea' to start again.";
-        nextStep = 'NONE';
-        break;
-
-      default:
-        nextStep = 'NONE';
-        response.text = "System reset. Type 'submit idea' to start.";
-        break;
+      }
+    } catch (gateErr) {
+      console.error('[GATE] Policy check error:', gateErr.message);
     }
+    // ─── END CONFIDENCE GATING ─────────────────────────────
 
-    // 3. Save State
-    session.currentStep = nextStep;
-    session.tempData = { ...tempData };
-    session.changed('tempData', true);
-
-    let msgs = session.messages || [];
-    if (typeof msgs === 'string') try { msgs = JSON.parse(msgs); } catch (e) { msgs = []; }
-
-    msgs.push({ role: "user", text: message });
-    msgs.push({ role: "assistant", text: response.text });
-    session.messages = msgs;
+    // Save history
+    history.push({ role: "user", text: message });
+    history.push({
+      role: "assistant",
+      text: response.text,
+      ai_metadata: response.ai_metadata || null
+    });
+    session.messages = history;
     session.changed('messages', true);
-
     await session.save();
+
+    return sendReply(res, response.text);
+
+    // --- STATE MACHINE REMOVED (Idea Feature Deleted) ---
 
     // 4. Send Reply
     return sendReply(res, response.text, response.suggestions || [], response.ai_metadata);
