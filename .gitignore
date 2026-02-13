@@ -33,6 +33,7 @@ yarn-error.log*
 # Deploy Keys
 github_actions_ed25519
 github_actions_ed25519.pub
+/AWS/chatbot-prod-key.pem
 
 # Logs & Backups
 server_*.log

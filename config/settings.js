@@ -41,8 +41,8 @@ const settings = {
     features: {
         aiEnabled: process.env.AI_ENABLED === 'true' || true, // Default ON
 
-        // Extraction: ON in dev, OFF in prod/staging (unless overridden)
-        extractionEnabled: process.env.EXTRACTION_ENABLED === 'true' || (env === 'development'),
+        // Extraction: Default ON (unless explicitly disabled)
+        extractionEnabled: process.env.EXTRACTION_ENABLED !== 'false',
 
         // Widget: ON in dev, LIMITED in staging, OFF in prod (auto-features)
         widgetAutoFeatures: process.env.WIDGET_ENABLED === 'true' || (env === 'development')
