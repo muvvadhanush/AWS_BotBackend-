@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { categorizePages, calculateCoverage, getLaunchReadiness } = require('../services/coverage/knowledgeCoverageService');
+const { categorizePages, calculateCoverage, getLaunchReadiness } = require('../services/coverage/kCoverageService');
 
 /**
  * POST /:id/recalculate-coverage
