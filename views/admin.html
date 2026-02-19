@@ -3,1372 +3,1507 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Assistant</title>
-    <link rel="stylesheet" href="admin.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Admin | AI Governance</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
         rel="stylesheet">
-    <!-- Ionicons for Dock -->
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <!-- Material Symbols for Wizard -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="/admin.css">
 </head>
 
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="main-header">
-            <div class="header-left">
-                <div class="brand-logo">
-                    <img src="branding/logo_ai.png" alt="AI Assistant" height="32" style="display:block;">
-                </div>
-                <h1 class="brand-title">AI Assistant</h1>
-            </div>
 
-            <div class="header-search">
-                <span class="material-symbols-outlined search-icon">search</span>
-                <input type="text" id="globalSearch" class="search-input" placeholder="Search connections, reports...">
-            </div>
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="brand">
+            <span class="material-symbols-outlined" style="color: var(--primary);">neurology</span>
+            Neural Bot
+        </div>
 
-            <div class="header-right">
-                <button class="header-icon-btn" title="Notifications">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
-                <button class="header-icon-btn" title="Settings">
-                    <span class="material-symbols-outlined">settings</span>
-                </button>
-                <div class="user-profile">
-                    <div class="user-info">
-                        <span class="user-name">Alex Rivera</span>
-                        <span class="user-role">ADMIN</span>
-                    </div>
-                    <div class="user-avatar">
-                        <span class="material-symbols-outlined">person</span>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <div class="nav-menu">
+            <a href="#" id="navDashboard" class="nav-item active">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+            <a href="#" id="navConnections" class="nav-item">
+                <span class="material-symbols-outlined">hub</span>
+                Connections
+                <span class="status-badge success" style="margin-left: auto; font-size: 0.7rem;">12</span>
+            </a>
+            <a href="#" id="navAnalytics" class="nav-item">
+                <span class="material-symbols-outlined">analytics</span>
+                Analytics
+            </a>
+            <a href="#" id="navSettings" class="nav-item">
+                <span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+            <a href="#" id="btnLogout" class="nav-item" style="margin-top: auto; color: var(--error);">
+                <span class="material-symbols-outlined">logout</span>
+                Logout
+            </a>
+        </div>
+    </nav>
 
-        <!-- System Overview -->
-        <section class="overview-section">
-            <div class="section-header">
-                <div>
-                    <h2 class="section-title">System Overview</h2>
-                    <p class="section-subtitle">Real-time performance metrics and active alerts.</p>
-                </div>
-                <a href="#" class="view-details-link">View Details <span class="material-symbols-outlined"
-                        style="font-size:18px;vertical-align:middle;">arrow_forward</span></a>
-            </div>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
 
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon red">
-                            <span class="material-symbols-outlined">warning</span>
-                        </div>
-                        <span class="metric-change red">-5%</span>
-                    </div>
-                    <h3 class="metric-label">At-Risk Responses</h3>
-                    <div class="metric-value" id="stat-risk-count">12</div>
-                    <div class="metric-bar">
-                        <div class="metric-bar-fill red" style="width:40%"></div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon blue">
-                            <span class="material-symbols-outlined">assignment</span>
-                        </div>
-                        <span class="metric-change blue">+12%</span>
-                    </div>
-                    <h3 class="metric-label">Pending Approvals</h3>
-                    <div class="metric-value">28</div>
-                    <div class="metric-bar">
-                        <div class="metric-bar-fill blue" style="width:60%"></div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon green">
-                            <span class="material-symbols-outlined">chat_bubble</span>
-                        </div>
-                        <span class="metric-change green">+8%</span>
-                    </div>
-                    <h3 class="metric-label">Active Conversations</h3>
-                    <div class="metric-value">156</div>
-                    <div class="metric-bar">
-                        <div class="metric-bar-fill green" style="width:85%"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- All Connections -->
-        <section class="connections-section">
-            <div class="section-header">
-                <h2 class="section-title">All Connections</h2>
-                <div class="section-actions">
-                    <button class="btn-filter">
-                        <span class="material-symbols-outlined" style="font-size:18px;">tune</span>
-                        Filter
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboardView">
+            <!-- HEADER -->
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="btnMobileMenu" class="btn-icon mobile-only">
+                        <span class="material-symbols-outlined">menu</span>
                     </button>
-                    <button class="btn-primary-action" id="newConnectionBtn">
-                        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                    <div class="page-title">
+                        <h1>Dashboard Overview</h1>
+                        <p>Manage your AI connections and performance.</p>
+                    </div>
+                </div>
+
+                <div class="user-profile">
+                    <button id="btnThemeToggle" class="btn-icon">
+                        <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
+                    </button>
+                    <button class="btn-icon">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <div class="avatar">T</div>
+                </div>
+            </header>
+
+            <!-- METRICS -->
+            <div class="metrics-grid">
+                <div class="neu-card">
+                    <div class="metric-label">Total Connections</div>
+                    <div id="metricConnections" class="metric-value">-</div>
+                    <div class="text-success" style="font-size: 0.9rem;">Live</div>
+                </div>
+                <div class="neu-card">
+                    <div class="metric-label">Active Conversations</div>
+                    <div id="metricConversations" class="metric-value">-</div>
+                    <div class="text-success" style="font-size: 0.9rem;">Live</div>
+                </div>
+                <div class="neu-card">
+                    <div class="metric-label">Knowledge Sources</div>
+                    <div id="metricKnowledge" class="metric-value">-</div>
+                    <div class="text-secondary" style="font-size: 0.9rem;">Across all bots</div>
+                </div>
+                <div class="neu-card">
+                    <div class="metric-label">Platform Health</div>
+                    <div id="metricHealth" class="metric-value">-</div>
+                    <div id="metricHealthLabel" class="text-success" style="font-size: 0.9rem;">Stable</div>
+                </div>
+                <div class="neu-card">
+                    <div class="metric-label">Estimated API Cost</div>
+                    <div id="metricCost" class="metric-value">-</div>
+                    <div class="text-secondary" style="font-size: 0.9rem;">Current Month (est)</div>
+                </div>
+                <div class="neu-card">
+                    <div class="metric-label">Knowledge Gaps</div>
+                    <div id="metricGaps" class="metric-value">-</div>
+                    <div id="metricGapsLabel" class="text-success" style="font-size: 0.9rem;">0 Pending</div>
+                </div>
+            </div>
+
+            <!-- CONNECTIONS -->
+            <section>
+                <div class="header" style="margin-bottom: 24px;">
+                    <h2 style="font-size: 1.4rem;">All Connections</h2>
+                    <button id="btnNewConnection" class="btn-neu">
+                        <span class="material-symbols-outlined">add</span>
                         New Connection
                     </button>
                 </div>
-            </div>
 
-            <div id="connectionsList" class="connections-grid">
-                <!-- Cards injected via JS -->
-                <div class="loading">Loading connections...</div>
-            </div>
-        </section>
-    </div>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <div class="footer-inner">
-            <div class="footer-links">
-                <a href="#">DOCUMENTATION</a>
-                <a href="#">API STATUS</a>
-                <a href="#">SUPPORT</a>
-            </div>
-            <div class="footer-right">
-                <span class="footer-copyright">© 2024 Deep Ocean Systems. All rights reserved.</span>
-                <span class="system-status" id="healthStatus">
-                    <span class="status-dot"></span>
-                    <span class="status-text">SYSTEM NOMINAL</span>
-                </span>
-            </div>
+                <div id="connectionsList" class="connections-grid">
+                    <!-- Javascript will populate this -->
+                    <div class="loading">Loading connections...</div>
+                </div>
+            </section>
         </div>
-    </footer>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- NEW 10-PAGE WIZARD (Full-screen overlay)                       -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div id="connectionWizard" class="wz-overlay">
-        <div class="wz-root">
-
-            <!-- ── Wizard Header ─────────────────────────────────── -->
-            <header class="wz-header">
-                <div class="wz-header-left">
-                    <div class="wz-header-icon">
-                        <span class="material-symbols-outlined">auto_fix_high</span>
-                    </div>
+        <!-- DETAILS VIEW (Tabbed Interface) -->
+        <div id="detailsView" class="hidden">
+            <header class="header">
+                <div class="page-title">
+                    <button id="btnBackToDash" class="btn-icon" style="margin-right: 10px;">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div id="detailAvatar" class="avatar-circle"
+                        style="width:40px; height:40px; font-size:1.2rem; margin-right: 15px;">A</div>
                     <div>
-                        <h2 class="wz-header-title">Setup Wizard</h2>
-                        <p class="wz-header-subtitle" id="wzSubtitle">Step 1 of 4</p>
+                        <h1 id="detailTitle">Connection Details</h1>
+                        <p id="detailSubtitle">Manage knowledge and settings.</p>
                     </div>
                 </div>
-                <div class="wz-header-right">
-                    <button class="wz-icon-btn" title="Help">
-                        <span class="material-symbols-outlined">help</span>
-                    </button>
-                    <button class="wz-icon-btn" id="wzCloseBtn" title="Close">
-                        <span class="material-symbols-outlined">close</span>
+            </header>
+
+            <!-- TABS -->
+            <div class="tabs-container">
+                <div class="tab-header">
+                    <div class="tab-item active" data-tab="tabTune">
+                        <span class="material-symbols-outlined">tune</span> Tune
+                    </div>
+                    <div class="tab-item" data-tab="tabTest">
+                        <span class="material-symbols-outlined">chat</span> Test
+                    </div>
+                    <div class="tab-item" data-tab="tabWidget">
+                        <span class="material-symbols-outlined">widgets</span> Widget
+                    </div>
+                    <div class="tab-item" data-tab="tabCustomize">
+                        <span class="material-symbols-outlined">palette</span> Customize
+                    </div>
+                    <div class="tab-item" data-tab="tabIntegrations">
+                        <span class="material-symbols-outlined">hub</span> Integrations
+                    </div>
+                    <div class="tab-item" data-tab="tabButtons">
+                        <span class="material-symbols-outlined">smart_button</span> Buttons
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: TUNE -->
+                <div id="tabTune" class="tab-content active">
+                    <div class="two-col-grid">
+                        <section>
+                            <h2 class="section-title">Business Details</h2>
+                            <div class="neu-card">
+                                <div class="input-group">
+                                    <label>Assistant Name</label>
+                                    <input type="text" id="tuneName" class="input-neu">
+                                </div>
+                                <div class="input-group">
+                                    <label>System Prompt (Instructions)</label>
+                                    <textarea id="tunePrompt" class="input-neu" rows="6"
+                                        placeholder="You are a helpful assistant..."></textarea>
+                                </div>
+                                <button id="btnSaveTune" class="btn-neu" style="width: 100%; color: var(--success);">
+                                    <span class="material-symbols-outlined">save</span> Save Tunings
+                                </button>
+                            </div>
+
+                            <h2 class="section-title" style="margin-top: 20px;">AI Behavior</h2>
+                            <div class="neu-card">
+                                <div class="input-group">
+                                    <label>Assistant Tone</label>
+                                    <select id="tuneTone" class="input-neu">
+                                        <option value="Professional">Professional</option>
+                                        <option value="Friendly">Friendly</option>
+                                        <option value="Sales-Oriented">Sales-Oriented</option>
+                                        <option value="Technical">Technical</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Response Length (Max Tokens)</label>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="range" id="tuneLength" min="50" max="800" step="50" value="400"
+                                            class="range-neu">
+                                        <span id="valTuneLength" style="font-weight: 600; min-width: 40px;">400</span>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Confidence Threshold</label>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="range" id="tuneThreshold" min="0" max="1" step="0.1" value="0.7"
+                                            class="range-neu">
+                                        <span id="valTuneThreshold"
+                                            style="font-weight: 600; min-width: 40px;">0.7</span>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 10px;">
+                                    Adjust how much knowledge similarity is required for the AI to attempt an answer.
+                                </p>
+                            </div>
+
+                            <h2 class="section-title" style="margin-top: 20px;">Knowledge Base</h2>
+                            <div class="neu-card">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">
+                                    Manage your indexed content.
+                                </p>
+                                <button id="btnRefreshExtract" class="btn-neu" style="width: 100%;">
+                                    <span class="material-symbols-outlined">refresh</span> re-Scan Website
+                                </button>
+                                <div id="knowledgeList" class="review-list" style="margin-top: 15px;">
+                                    <!-- Dynamic Content -->
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h2 class="section-title">Missed Questions</h2>
+                            <div id="missedList" class="review-list">
+                                <div class="empty-state">No missed questions yet.</div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: TEST -->
+                <div id="tabTest" class="tab-content">
+                    <div class="chat-preview" style="height: 600px;">
+                        <div class="chat-messages" id="testTabMessages">
+                            <div class="msg-bot">Hello! I'm ready to help.</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="inpTestTabChat" placeholder="Type a message..." class="input-neu">
+                            <button id="btnSendTestTabChat" class="btn-icon">
+                                <span class="material-symbols-outlined">send</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: WIDGET -->
+                <div id="tabWidget" class="tab-content">
+                    <div class="two-col-grid">
+                        <section>
+                            <h2 class="section-title">Installation</h2>
+                            <div class="neu-card">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">
+                                    Add this code to your website's <code>&lt;head&gt;</code> tag.
+                                </p>
+                                <div class="code-block" id="snippetView"></div>
+                                <button id="btnCopySnippetView" class="btn-neu" style="width: 100%; margin-top: 10px;">
+                                    <span class="material-symbols-outlined">content_copy</span> Copy Code
+                                </button>
+                            </div>
+                        </section>
+                        <section>
+                            <h2 class="section-title">Preview</h2>
+                            <div class="neu-card"
+                                style="height: 300px; display: flex; align-items: center; justify-content: center; background: var(--bg-body);">
+                                <p style="color: var(--text-tertiary);">Widget Preview Placeholder</p>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: CUSTOMIZE -->
+                <div id="tabCustomize" class="tab-content">
+                    <section style="max-width: 600px;">
+                        <h2 class="section-title">Appearance</h2>
+                        <div class="neu-card">
+                            <div class="input-group">
+                                <label>Widget Title</label>
+                                <input type="text" id="cfgTitle" class="input-neu" placeholder="AI Assistant">
+                            </div>
+                            <div class="input-group">
+                                <label>Welcome Message</label>
+                                <input type="text" id="cfgWelcome" class="input-neu" placeholder="Hi! How can I help?">
+                            </div>
+
+                            <div class="two-col-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="input-group">
+                                    <label>Brand Color</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="color" id="cfgColor" value="#4f46e5"
+                                            style="height: 40px; width: 60px; border: none; background: none; cursor: pointer;">
+                                        <span id="cfgColorVal">#4f46e5</span>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Auto-Open (sec)</label>
+                                    <input type="number" id="cfgTimer" class="input-neu" min="0"
+                                        placeholder="0 (Disabled)">
+                                </div>
+                                <div class="input-group">
+                                    <label>Bot Avatar URL (Optional)</label>
+                                    <input type="text" id="cfgAvatar" class="input-neu" placeholder="https://...">
+                                </div>
+                            </div>
+
+                            <button id="btnSaveConfig" class="btn-neu"
+                                style="width: 100%; margin-top: 15px; color: var(--success);">
+                                <span class="material-symbols-outlined">save</span> Save Appearance
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- TAB CONTENT: INTEGRATIONS -->
+                <div id="tabIntegrations" class="tab-content">
+                    <div class="two-col-grid">
+                        <section>
+                            <h2 class="section-title">Enterprise Connectors</h2>
+                            <div class="neu-card">
+                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111615.png" width="32"
+                                        alt="Slack">
+                                    <div>
+                                        <h3 style="margin-bottom: 2px;">Slack Notifications</h3>
+                                        <p style="font-size: 0.8rem; color: var(--text-tertiary);">Send knowledge gaps
+                                            and escalations to a Slack channel.</p>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Incoming Webhook URL</label>
+                                    <input type="password" id="slackWebhook" class="input-neu"
+                                        placeholder="https://hooks.slack.com/services/...">
+                                </div>
+                                <button id="btnSaveSlack" class="btn-neu" style="width: 100%; color: var(--success);">
+                                    <span class="material-symbols-outlined">save</span> Save Slack Config
+                                </button>
+                            </div>
+
+                            <div class="neu-card" style="margin-top: 20px; opacity: 0.6; filter: grayscale(1);">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/5968/5968852.png" width="32"
+                                        alt="Salesforce">
+                                    <div>
+                                        <h3 style="margin-bottom: 2px;">Salesforce CRM (Coming Soon)</h3>
+                                        <p style="font-size: 0.8rem;">Sync leads and feedback directly to your CRM.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h2 class="section-title">Workflow Actions</h2>
+                            <div class="neu-card">
+                                <div class="input-group">
+                                    <label>Action Type</label>
+                                    <select id="actionType" class="input-neu">
+                                        <option value="NONE">No Action</option>
+                                        <option value="WEBHOOK">Generic Webhook</option>
+                                        <option value="EMAIL">Email Alert</option>
+                                        <option value="SLACK">Slack Message</option>
+                                    </select>
+                                </div>
+                                <p style="font-size: 0.8rem; color: var(--text-tertiary);">This action triggers when a
+                                    user completes a guided flow.</p>
+                                <button id="btnSaveAction" class="btn-neu"
+                                    style="width: 100%; margin-top: 20px; color: var(--success);">
+                                    <span class="material-symbols-outlined">save</span> Save Action Policy
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: BUTTONS -->
+                <div id="tabButtons" class="tab-content">
+                    <div class="two-col-grid">
+                        <section>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <h2 class="section-title">Button Sets</h2>
+                                <button class="btn-neu" onclick="showButtonEditor()" style="color:var(--accent);">
+                                    <span class="material-symbols-outlined">add</span> New
+                                </button>
+                            </div>
+                            <div id="buttonSetsList" class="btn-sets-list">
+                                <div class="empty-state"
+                                    style="text-align:center;padding:40px;color:var(--text-tertiary);">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size:48px;opacity:0.3;">smart_button</span>
+                                    <p style="margin-top:12px;">No button sets yet. Create one to add interactive
+                                        buttons to your chatbot.</p>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h2 class="section-title">Live Preview</h2>
+                            <div class="neu-card" id="buttonPreviewPanel">
+                                <div
+                                    style="background:linear-gradient(135deg,#f0f0ff,#fff);border-radius:16px;padding:16px;min-height:120px;position:relative;">
+                                    <div
+                                        style="background:#fff;padding:10px 14px;border-radius:14px;font-size:13px;color:#374151;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:inline-block;max-width:80%;">
+                                        How can I help you today?
+                                    </div>
+                                    <div id="previewBtnsContainer"
+                                        style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>
+                                </div>
+                                <p
+                                    style="font-size:0.75rem;color:var(--text-tertiary);margin-top:10px;text-align:center;">
+                                    This preview shows how buttons appear in the widget.
+                                </p>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- BUTTON EDITOR DIALOG -->
+                    <div id="buttonEditorDialog" class="btn-editor-dialog hidden">
+                        <div class="btn-editor-overlay"></div>
+                        <div class="btn-editor-content">
+                            <div class="btn-editor-header">
+                                <h3 id="btnEditorTitle">Create Button Set</h3>
+                                <button class="btn-icon" onclick="hideButtonEditor()">
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div class="btn-editor-body">
+                                <div class="input-group">
+                                    <label>Set Name</label>
+                                    <input type="text" id="btnSetName" class="input-neu"
+                                        placeholder="e.g. Welcome Buttons" maxlength="100">
+                                </div>
+                                <div style="display:flex;gap:16px;">
+                                    <div class="input-group" style="flex:1;">
+                                        <label>Trigger Type</label>
+                                        <select id="btnTriggerType" class="input-neu" onchange="toggleTriggerValue()">
+                                            <option value="MANUAL">Manual</option>
+                                            <option value="WELCOME">Welcome (1st message)</option>
+                                            <option value="KEYWORD">Keyword Match</option>
+                                            <option value="FALLBACK">Low Confidence Fallback</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group" style="flex:1;">
+                                        <label>Quick Reply</label>
+                                        <label class="toggle-label">
+                                            <input type="checkbox" id="btnQuickReply">
+                                            <span style="font-size:0.8rem;color:var(--text-secondary);">Disappear after
+                                                click</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="triggerValueGroup" class="input-group hidden">
+                                    <label>Keywords (comma-separated)</label>
+                                    <input type="text" id="btnTriggerValue" class="input-neu"
+                                        placeholder="pricing, plans, cost">
+                                </div>
+
+                                <h4 style="margin-top:16px;margin-bottom:8px;">Buttons <span id="btnCountBadge"
+                                        style="font-size:0.75rem;color:var(--text-tertiary);">(0/5)</span></h4>
+                                <div id="buttonRowsContainer"></div>
+                                <button class="btn-neu" id="btnAddRow" onclick="addButtonRow()"
+                                    style="width:100%;margin-top:8px;color:var(--accent);">
+                                    <span class="material-symbols-outlined">add</span> Add Button
+                                </button>
+                            </div>
+                            <div class="btn-editor-footer">
+                                <button class="btn-neu" onclick="hideButtonEditor()">Cancel</button>
+                                <button class="btn-neu" id="btnSaveSet" onclick="saveButtonSet()"
+                                    style="color:var(--success);">
+                                    <span class="material-symbols-outlined">save</span> Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ANALYTICS VIEW -->
+        <div id="analyticsView" class="hidden">
+            <header class="header">
+                <div class="page-title">
+                    <h1>Performance Analytics</h1>
+                    <p>Insights into your chatbot's conversations and engagement.</p>
+                </div>
+                <div class="user-profile">
+                    <button class="btn-neu" onclick="loadAnalyticsData()">
+                        <span class="material-symbols-outlined">refresh</span>
                     </button>
                 </div>
             </header>
 
-            <!-- ── Wizard Body ───────────────────────────────────── -->
-            <main class="wz-body">
-                <div class="wz-content">
-
-                    <!-- ── Progress Stepper (shared across all pages) ── -->
-                    <div class="wz-progress-card" id="wzProgressCard">
-                        <div class="wz-progress-meta">
-                            <div>
-                                <span class="wz-progress-label">Current Step</span>
-                                <h3 class="wz-progress-title" id="wzProgressTitle">Step 1 of 4: Establish Connection
-                                </h3>
-                            </div>
-                            <span class="wz-progress-badge" id="wzProgressBadge">10%</span>
-                        </div>
-                        <div class="wz-progress-track">
-                            <div class="wz-progress-fill" id="wzProgressBar" style="width:10%"></div>
-                        </div>
-                        <div class="wz-step-indicators">
-                            <div class="wz-step-ind active" data-step="1">
-                                <div class="wz-step-bar"></div>
-                                <span>1. Connect</span>
-                            </div>
-                            <div class="wz-step-ind" data-step="2">
-                                <div class="wz-step-bar"></div>
-                                <span>2. Knowledge</span>
-                            </div>
-                            <div class="wz-step-ind" data-step="3">
-                                <div class="wz-step-bar"></div>
-                                <span>3. Analyze</span>
-                            </div>
-                            <div class="wz-step-ind" data-step="4">
-                                <div class="wz-step-bar"></div>
-                                <span>4. Launch</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 1.0 — Establish Connection Form               -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page active" id="wzPage1_0" data-step="1" data-sub="0">
-                        <div class="wz-card">
-                            <div class="wz-card-body">
-                                <h1 class="wz-page-title">Establish Connection</h1>
-                                <p class="wz-page-desc">Create a unique connection profile. This generates your
-                                    Connection ID and Secret Code for secure communication.</p>
-
-                                <div class="wz-form-group">
-                                    <label class="wz-label">Website Name</label>
-                                    <input type="text" id="wzWebsiteName" class="wz-input"
-                                        placeholder="e.g. Acme Corp Support" required>
-                                </div>
-
-                                <!-- Generated Fields (shown after creation) -->
-                                <div id="wzGeneratedFields" style="display:none;">
-                                    <div class="wz-form-row">
-                                        <div class="wz-form-group">
-                                            <label class="wz-label">Connection ID</label>
-                                            <div class="wz-input-readonly">
-                                                <input type="text" id="wzConnId" class="wz-input" readonly>
-                                                <span class="wz-readonly-tag">Auto-generated</span>
-                                            </div>
-                                        </div>
-                                        <div class="wz-form-group">
-                                            <label class="wz-label">Secret Code</label>
-                                            <div class="wz-input-readonly">
-                                                <input type="text" id="wzSecret" class="wz-input" readonly>
-                                                <span class="wz-readonly-tag">Auto-generated</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card Footer -->
-                            <div class="wz-card-footer">
-                                <div class="wz-security-note">
-                                    <span class="material-symbols-outlined">lock</span>
-                                    <span>TLS 1.3 encrypted · SOC 2 compliant</span>
-                                </div>
-                                <button type="button" id="wzConnectBtn" class="wz-btn-primary">
-                                    <span>Connect & Continue</span>
-                                    <span class="material-symbols-outlined">arrow_forward</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 1.1 — Embed Code + Signal Detection           -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage1_1" data-step="1" data-sub="1">
-                        <div class="wz-card">
-                            <div class="wz-card-body">
-                                <h1 class="wz-page-title">Connect your website</h1>
-                                <p class="wz-page-desc">
-                                    Copy and paste the following snippet into the <code
-                                        class="wz-code-inline">&lt;head&gt;</code> section of your website's HTML.
-                                </p>
-
-                                <!-- Code Snippet -->
-                                <div class="wz-code-block">
-                                    <div class="wz-code-header">
-                                        <div class="wz-code-dots">
-                                            <span class="wz-dot red"></span>
-                                            <span class="wz-dot yellow"></span>
-                                            <span class="wz-dot green"></span>
-                                        </div>
-                                        <span class="wz-code-label">Global Tracking Script</span>
-                                    </div>
-                                    <div class="wz-code-content">
-                                        <code id="wzEmbedCode" class="wz-code-text"></code>
-                                        <button type="button" class="wz-btn-copy" id="wzCopyCodeBtn">
-                                            <span class="material-symbols-outlined">content_copy</span>
-                                            <span>Copy Code</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Signal Monitor -->
-                                <div class="wz-signal-monitor" id="wzSignalMonitor">
-                                    <div class="wz-signal-pulse">
-                                        <div class="wz-pulse-ring"></div>
-                                        <div class="wz-pulse-core">
-                                            <span class="material-symbols-outlined">sensors</span>
-                                        </div>
-                                    </div>
-                                    <div class="wz-signal-text">
-                                        <h4>Waiting for signal...</h4>
-                                        <p>Once the script is installed correctly, we'll automatically detect the
-                                            connection and unlock the next step.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card Footer -->
-                            <div class="wz-card-footer">
-                                <button type="button" class="wz-btn-ghost" id="wzBack1_1">
-                                    <span class="material-symbols-outlined">arrow_back</span>
-                                    <span>Go Back</span>
-                                </button>
-                                <div class="wz-footer-right">
-                                    <span class="wz-time-hint">
-                                        <span class="material-symbols-outlined">schedule</span>
-                                        Estimated time: 2 mins
-                                    </span>
-                                    <button type="button" class="wz-btn-primary disabled" id="wzNext1_1" disabled>
-                                        <span>Next Step</span>
-                                        <span class="material-symbols-outlined">arrow_forward</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Help Cards -->
-                        <div class="wz-help-grid">
-                            <div class="wz-help-card">
-                                <div class="wz-help-icon"><span class="material-symbols-outlined">code_off</span></div>
-                                <div>
-                                    <h5>Having trouble?</h5>
-                                    <p>Check our documentation for WordPress, Shopify, or custom React setups.</p>
-                                </div>
-                            </div>
-                            <div class="wz-help-card">
-                                <div class="wz-help-icon"><span class="material-symbols-outlined">mail</span></div>
-                                <div>
-                                    <h5>Send to developer</h5>
-                                    <p>Email these instructions and code snippet directly to your tech team.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 1.2 — Connection Success                      -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage1_2" data-step="1" data-sub="2">
-                        <div class="wz-success-header">
-                            <div class="wz-success-icon">
-                                <span class="material-symbols-outlined">check_circle</span>
-                            </div>
-                            <h1 class="wz-page-title">Widget Connected Successfully!</h1>
-                            <p class="wz-page-desc">Your widget is now communicating with our servers. Review the
-                                details below before proceeding.</p>
-                        </div>
-
-                        <div class="wz-card">
-                            <div class="wz-connection-detail">
-                                <div class="wz-conn-preview"></div>
-                                <div class="wz-conn-info">
-                                    <div class="wz-conn-status-row">
-                                        <span class="wz-online-badge">
-                                            <span class="wz-online-dot"></span> Online
-                                        </span>
-                                        <span class="wz-conn-id" id="wzConnIdDisplay">WID-0000-X</span>
-                                    </div>
-                                    <h3 id="wzConnNameDisplay">My Website Bot</h3>
-                                    <p class="wz-conn-subtitle">Primary Customer Support Widget</p>
-                                    <div class="wz-conn-stats">
-                                        <div>
-                                            <p class="wz-stat-label">Latency</p>
-                                            <p class="wz-stat-value">12ms</p>
-                                        </div>
-                                        <div>
-                                            <p class="wz-stat-label">Protocol</p>
-                                            <p class="wz-stat-value">WSS Secure</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="wz-action-stack">
-                            <button type="button" class="wz-btn-primary wz-btn-lg" id="wzNext1_2">
-                                Next: Configure Knowledge Base
-                                <span class="material-symbols-outlined">arrow_forward</span>
-                            </button>
-                            <button type="button" class="wz-btn-outline" id="wzBackToSettings">
-                                Back to Connection Settings
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 2.0 — Knowledge Base Setup                    -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage2_0" data-step="2" data-sub="0">
-                        <div class="wz-two-col">
-                            <!-- Left: Data Source Extraction -->
-                            <div class="wz-card">
-                                <div class="wz-card-body">
-                                    <div class="wz-section-header">
-                                        <span class="material-symbols-outlined">travel_explore</span>
-                                        <h3>Data Source Extraction</h3>
-                                    </div>
-                                    <p class="wz-page-desc">Enter your website URL. Our AI crawler will intelligently
-                                        extract and structure your content.</p>
-
-                                    <div class="wz-form-group">
-                                        <label class="wz-label">Website URL</label>
-                                        <div class="wz-input-with-btn">
-                                            <input type="url" id="wzExtractUrl" class="wz-input"
-                                                placeholder="https://www.example.com">
-                                            <button type="button" id="wzExtractBtn" class="wz-btn-primary">
-                                                <span class="material-symbols-outlined">radar</span> Extract
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="wz-crawler-settings">
-                                        <h4>Crawler Settings</h4>
-                                        <div class="wz-setting-row">
-                                            <span>Depth</span>
-                                            <select id="wzCrawlDepth" class="wz-select">
-                                                <option value="2">2 levels</option>
-                                                <option value="3" selected>3 levels</option>
-                                                <option value="5">5 levels</option>
-                                            </select>
-                                        </div>
-                                        <div class="wz-setting-row">
-                                            <span>Max Pages</span>
-                                            <select id="wzMaxPages" class="wz-select">
-                                                <option value="50">50</option>
-                                                <option value="100" selected>100</option>
-                                                <option value="200">200</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <!-- Scanning State -->
-                                    <div id="wzScanProgress" style="display:none;" class="wz-scan-progress">
-                                        <div class="wz-spinner"></div>
-                                        <h4 id="wzScanStatusText">Analyzing pages...</h4>
-                                        <div class="wz-progress-track small">
-                                            <div class="wz-progress-fill" id="wzScanProgressBar" style="width:0%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right: Brand Identity -->
-                            <div class="wz-card">
-                                <div class="wz-card-body">
-                                    <div class="wz-section-header">
-                                        <span class="material-symbols-outlined">palette</span>
-                                        <h3>Brand Identity</h3>
-                                    </div>
-
-                                    <div class="wz-form-group">
-                                        <label class="wz-label">Logo</label>
-                                        <div class="wz-upload-zone" id="wzLogoUpload">
-                                            <span class="material-symbols-outlined">cloud_upload</span>
-                                            <span>Drop logo or click to upload</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="wz-form-group">
-                                        <label class="wz-label">Brand Color</label>
-                                        <div class="wz-color-row">
-                                            <input type="color" id="wzBrandColor" value="#4850e5"
-                                                class="wz-color-picker">
-                                            <input type="text" id="wzBrandColorHex" class="wz-input" value="#4850e5"
-                                                style="max-width:120px;">
-                                        </div>
-                                    </div>
-
-                                    <div class="wz-form-group">
-                                        <label class="wz-label">Assistant Name</label>
-                                        <input type="text" id="wzAssistantName" class="wz-input"
-                                            placeholder="e.g. Ava, Max, Helper">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer -->
-                        <div class="wz-page-footer">
-                            <button type="button" class="wz-btn-ghost" id="wzBack2_0">
-                                <span class="material-symbols-outlined">arrow_back</span> Back
-                            </button>
-                            <button type="button" class="wz-btn-primary" id="wzNext2_0">
-                                Save & Continue
-                                <span class="material-symbols-outlined">arrow_forward</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 2.1 — Extraction Results Review                -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage2_1" data-step="2" data-sub="1">
-                        <div class="wz-breadcrumb">
-                            <span>Step 1: URL Input</span>
-                            <span class="material-symbols-outlined">chevron_right</span>
-                            <span class="wz-breadcrumb-active">Step 2: Verify Extracted Data</span>
-                            <span class="material-symbols-outlined">chevron_right</span>
-                            <span class="wz-breadcrumb-dim">Step 3: Train Model</span>
-                        </div>
-                        <h2 class="wz-page-title">Review Extraction Results</h2>
-                        <p class="wz-page-desc">We've processed the URL. Please verify that the visual identity and
-                            content structure match your website.</p>
-
-                        <div class="wz-review-layout">
-                            <!-- Sidebar: Brand Identity -->
-                            <aside class="wz-review-sidebar">
-                                <div class="wz-card">
-                                    <div class="wz-card-body">
-                                        <div class="wz-section-header">
-                                            <span class="material-symbols-outlined">brush</span>
-                                            <h3>Brand Identity</h3>
-                                        </div>
-                                        <div class="wz-form-group">
-                                            <label class="wz-label">Extracted Logo</label>
-                                            <div class="wz-logo-preview" id="wzExtractedLogo">
-                                                <span class="material-symbols-outlined">image</span>
-                                            </div>
-                                        </div>
-                                        <div class="wz-form-group">
-                                            <label class="wz-label">Brand Palette</label>
-                                            <div class="wz-palette" id="wzExtractedPalette">
-                                                <div class="wz-swatch" style="background:#4850e5" title="#4850e5"></div>
-                                                <div class="wz-swatch" style="background:#111221" title="#111221"></div>
-                                                <div class="wz-swatch" style="background:#f0f1f4" title="#f0f1f4"></div>
-                                                <div class="wz-swatch" style="background:#e2e8f0" title="#e2e8f0"></div>
-                                                <div class="wz-swatch" style="background:#646587" title="#646587"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wz-card">
-                                    <div class="wz-card-body">
-                                        <div class="wz-section-header">
-                                            <span class="material-symbols-outlined">analytics</span>
-                                            <h3>Content Breakdown</h3>
-                                        </div>
-                                        <div class="wz-stats-list">
-                                            <div class="wz-stat-row">
-                                                <span>Total Pages</span>
-                                                <strong id="wzTotalPages">0</strong>
-                                            </div>
-                                            <div class="wz-stat-row">
-                                                <span>Avg. Text Density</span>
-                                                <strong id="wzTextDensity">-</strong>
-                                            </div>
-                                            <div class="wz-stat-row">
-                                                <span>Media Assets</span>
-                                                <strong id="wzMediaAssets">0 items</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </aside>
-
-                            <!-- Main: Preview -->
-                            <section class="wz-review-main">
-                                <div class="wz-card wz-preview-card">
-                                    <div class="wz-preview-toolbar">
-                                        <div class="wz-preview-dots">
-                                            <span class="wz-dot gray"></span>
-                                            <span class="wz-dot gray"></span>
-                                            <span class="wz-dot gray"></span>
-                                        </div>
-                                        <div class="wz-preview-url" id="wzPreviewUrl">
-                                            <span class="material-symbols-outlined">lock</span>
-                                            <span>https://www.example.com</span>
-                                        </div>
-                                    </div>
-                                    <div class="wz-preview-body" id="wzPreviewBody">
-                                        <!-- Scraped content placeholder -->
-                                        <div class="wz-preview-skeleton">
-                                            <div class="wz-skel-bar w80"></div>
-                                            <div class="wz-skel-bar w60"></div>
-                                            <div class="wz-skel-grid">
-                                                <div class="wz-skel-box"></div>
-                                                <div class="wz-skel-box"></div>
-                                            </div>
-                                            <div class="wz-skel-bar w100"></div>
-                                            <div class="wz-skel-bar w90"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-                        </div>
-
-                        <!-- Footer -->
-                        <div class="wz-page-footer">
-                            <button type="button" class="wz-btn-ghost" id="wzBack2_1">
-                                <span class="material-symbols-outlined">arrow_back</span> Back to URL Input
-                            </button>
-                            <div class="wz-footer-right">
-                                <button type="button" class="wz-btn-outline" id="wzRescan">Rescan Website</button>
-                                <button type="button" class="wz-btn-primary" id="wzNext2_1">
-                                    Confirm & Proceed to Step 3
-                                    <span class="material-symbols-outlined">arrow_forward</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 3.0 — Brand Intelligence Engine (Hero)         -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage3_0" data-step="3" data-sub="0">
-                        <div class="wz-hero">
-                            <div class="wz-hero-badge">
-                                <span class="material-symbols-outlined">psychology</span>
-                                Brand Intelligence Engine
-                            </div>
-                            <h1 class="wz-hero-title">Behavioral Analysis</h1>
-                            <p class="wz-hero-subtitle">Our proprietary engine analyzes your website to build a
-                                psychographic brand profile — mapping tone, audience behavior, and conversion patterns.
-                            </p>
-                            <div class="wz-hero-actions">
-                                <button type="button" class="wz-btn-primary wz-btn-lg" id="wzStartAnalysis">
-                                    <span class="material-symbols-outlined">play_arrow</span>
-                                    Start Analysis
-                                </button>
-                                <button type="button" class="wz-btn-outline" id="wzAdvancedParams">
-                                    <span class="material-symbols-outlined">tune</span>
-                                    Advanced Parameters
-                                </button>
-                            </div>
-                            <div class="wz-trust-badges">
-                                <span><span class="material-symbols-outlined">verified</span> SOC 2 Verified</span>
-                                <span><span class="material-symbols-outlined">speed</span> Under 60s</span>
-                                <span><span class="material-symbols-outlined">lock</span> Zero Data Retention</span>
-                            </div>
-                        </div>
-
-                        <!-- Analysis Loading -->
-                        <div id="wzAnalysisLoading" style="display:none;" class="wz-analysis-loading">
-                            <div class="wz-spinner large"></div>
-                            <h3>Analyzing content patterns...</h3>
-                            <p>This typically takes 30-60 seconds</p>
-                        </div>
-
-                        <!-- Methodology Cards -->
-                        <div class="wz-method-grid">
-                            <div class="wz-method-card">
-                                <span class="material-symbols-outlined">pattern</span>
-                                <h4>Pattern Recognition</h4>
-                                <p>Deep structural analysis of content hierarchy and information architecture.</p>
-                            </div>
-                            <div class="wz-method-card">
-                                <span class="material-symbols-outlined">sentiment_satisfied</span>
-                                <h4>Sentiment Analysis</h4>
-                                <p>Multi-layer NLP to map emotional tone and brand personality vectors.</p>
-                            </div>
-                            <div class="wz-method-card">
-                                <span class="material-symbols-outlined">trending_up</span>
-                                <h4>Predictive Modeling</h4>
-                                <p>Forecasting engagement patterns based on behavioral data signals.</p>
-                            </div>
-                        </div>
-
-                        <div class="wz-page-footer">
-                            <button type="button" class="wz-btn-ghost" id="wzBack3_0">
-                                <span class="material-symbols-outlined">arrow_back</span> Back
-                            </button>
-                            <div></div>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 3.1 — Behavioral Analysis Dashboard           -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage3_1" data-step="3" data-sub="1">
-                        <h2 class="wz-page-title">Behavioral Analysis Results</h2>
-
-                        <!-- Metrics Row -->
-                        <div class="wz-metrics-row">
-                            <div class="wz-metric-card">
-                                <div class="wz-metric-header">
-                                    <span>Consistency Score</span>
-                                    <span class="material-symbols-outlined">verified</span>
-                                </div>
-                                <div class="wz-metric-value" id="wzConsistencyScore">--</div>
-                                <p class="wz-metric-desc">Overall alignment with core brand values</p>
-                            </div>
-                            <div class="wz-metric-card">
-                                <div class="wz-metric-header">
-                                    <span>Sentiment Accuracy</span>
-                                    <span class="material-symbols-outlined" style="color:#07883f">mood</span>
-                                </div>
-                                <div class="wz-metric-value" id="wzSentimentScore">--</div>
-                                <p class="wz-metric-desc">Precision of automated emotional tagging</p>
-                            </div>
-                            <div class="wz-metric-card">
-                                <div class="wz-metric-header">
-                                    <span>Engagement Velocity</span>
-                                    <span class="material-symbols-outlined" style="color:#e73c08">speed</span>
-                                </div>
-                                <div class="wz-metric-value" id="wzEngagementScore">--</div>
-                                <p class="wz-metric-desc">Rate of growth in psychological resonance</p>
-                            </div>
-                        </div>
-
-                        <div class="wz-analysis-grid">
-                            <!-- Archetype Distribution -->
-                            <div class="wz-card">
-                                <div class="wz-card-header">
-                                    <h3>Brand Archetype Distribution</h3>
-                                </div>
-                                <div class="wz-archetype-chart" id="wzArchetypeChart">
-                                    <div class="wz-archetype-visual">
-                                        <div class="wz-archetype-shape"></div>
-                                        <span class="wz-arch-label top">HERO</span>
-                                        <span class="wz-arch-label right-top">SAGE</span>
-                                        <span class="wz-arch-label right-bottom">RULER</span>
-                                        <span class="wz-arch-label bottom">EXPLORER</span>
-                                        <span class="wz-arch-label left-bottom">CREATOR</span>
-                                        <span class="wz-arch-label left-top">REBEL</span>
-                                    </div>
-                                </div>
-                                <div class="wz-archetype-legend">
-                                    <span><i class="wz-legend-dot primary"></i> Primary: <span
-                                            id="wzPrimaryArchetype">-</span></span>
-                                    <span><i class="wz-legend-dot secondary"></i> Secondary: <span
-                                            id="wzSecondaryArchetype">-</span></span>
-                                </div>
-                            </div>
-
-                            <!-- Tone & Voice + Drivers -->
-                            <div class="wz-analysis-right">
-                                <div class="wz-card">
-                                    <div class="wz-card-body">
-                                        <div class="wz-section-header">
-                                            <span class="material-symbols-outlined">record_voice_over</span>
-                                            <h3>Tone & Voice Characteristics</h3>
-                                        </div>
-                                        <div class="wz-traits-grid" id="wzTraitsGrid">
-                                            <div class="wz-trait-item">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <div>
-                                                    <h4>Authoritative</h4>
-                                                    <p>Speaks with expert confidence and technical depth.</p>
-                                                </div>
-                                            </div>
-                                            <div class="wz-trait-item">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <div>
-                                                    <h4>Problem-solver</h4>
-                                                    <p>Focuses on functional utility and direct results.</p>
-                                                </div>
-                                            </div>
-                                            <div class="wz-trait-item">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <div>
-                                                    <h4>Empathetic</h4>
-                                                    <p>Acknowledges user pain points with sensitivity.</p>
-                                                </div>
-                                            </div>
-                                            <div class="wz-trait-item">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <div>
-                                                    <h4>Direct</h4>
-                                                    <p>No-nonsense communication style, minimal jargon.</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Conversion Drivers -->
-                                <div class="wz-drivers-grid" id="wzDriversGrid">
-                                    <div class="wz-driver-card">
-                                        <div class="wz-driver-icon"><span
-                                                class="material-symbols-outlined">verified_user</span></div>
-                                        <h4>Trust Signals</h4>
-                                        <p>Leveraging certifications and peer security benchmarks.</p>
-                                    </div>
-                                    <div class="wz-driver-card">
-                                        <div class="wz-driver-icon"><span class="material-symbols-outlined">bolt</span>
-                                        </div>
-                                        <h4>Efficiency</h4>
-                                        <p>Focus on time-saving benefits and streamlined UX.</p>
-                                    </div>
-                                    <div class="wz-driver-card">
-                                        <div class="wz-driver-icon"><span
-                                                class="material-symbols-outlined">group_add</span></div>
-                                        <h4>Social Validation</h4>
-                                        <p>Using user-generated testimonials as proof-points.</p>
-                                    </div>
-                                    <div class="wz-driver-card">
-                                        <div class="wz-driver-icon"><span
-                                                class="material-symbols-outlined">favorite</span></div>
-                                        <h4>Resonance</h4>
-                                        <p>Building deep emotional connection via shared values.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- AI Recommendation -->
-                        <div class="wz-ai-rec" id="wzAiRec">
-                            <div class="wz-ai-rec-icon">
-                                <span class="material-symbols-outlined">auto_awesome</span>
-                            </div>
-                            <div class="wz-ai-rec-body">
-                                <h4>Psychological AI Recommendation</h4>
-                                <p id="wzAiRecText">Analysis results will appear here once processing is complete.</p>
-                            </div>
-                            <button type="button" class="wz-btn-primary" id="wzApplyStrategy">Apply Strategy</button>
-                        </div>
-
-                        <div class="wz-page-footer">
-                            <button type="button" class="wz-btn-ghost" id="wzBack3_1">
-                                <span class="material-symbols-outlined">arrow_back</span> Back
-                            </button>
-                            <button type="button" class="wz-btn-primary" id="wzNext3_1">
-                                Continue to Launch
-                                <span class="material-symbols-outlined">arrow_forward</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 4.0 — Ready for Launch (Checklist + Preview)   -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage4_0" data-step="4" data-sub="0">
-                        <div class="wz-launch-header">
-                            <span class="material-symbols-outlined">rocket_launch</span>
-                            <div>
-                                <h2 class="wz-page-title">Ready for Launch</h2>
-                                <p class="wz-page-desc">Complete the pre-flight checklist and review your assistant's
-                                    live preview.</p>
-                            </div>
-                        </div>
-
-                        <div class="wz-launch-layout">
-                            <!-- Left: Checklist + Snippet -->
-                            <div class="wz-launch-left">
-                                <div class="wz-card">
-                                    <div class="wz-card-body">
-                                        <h3>Pre-flight Checklist</h3>
-                                        <div class="wz-checklist">
-                                            <div class="wz-check-item done">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <span>Website Connected</span>
-                                            </div>
-                                            <div class="wz-check-item done">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <span>Knowledge Base Trained</span>
-                                            </div>
-                                            <div class="wz-check-item done">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <span>Brand Analysis Complete</span>
-                                            </div>
-                                            <div class="wz-check-item done">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                                <span>Behavior Configured</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="wz-card">
-                                    <div class="wz-card-body">
-                                        <h3>Embed Snippet</h3>
-                                        <div class="wz-code-block small">
-                                            <div class="wz-code-header">
-                                                <span class="wz-code-label">HTML</span>
-                                            </div>
-                                            <div class="wz-code-content">
-                                                <code id="wzFinalEmbed" class="wz-code-text"></code>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right: Live Preview -->
-                            <div class="wz-launch-right">
-                                <div class="wz-card wz-preview-card">
-                                    <div class="wz-preview-toolbar">
-                                        <div class="wz-preview-dots">
-                                            <span class="wz-dot gray"></span>
-                                            <span class="wz-dot gray"></span>
-                                            <span class="wz-dot gray"></span>
-                                        </div>
-                                        <span class="wz-code-label">Live Preview</span>
-                                    </div>
-                                    <div class="wz-chat-preview" id="wzChatPreview">
-                                        <div class="wz-chat-bubble bot">
-                                            <span class="material-symbols-outlined">smart_toy</span>
-                                            <p>Hi there! 👋 I'm your AI assistant. How can I help you today?</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="wz-page-footer">
-                            <button type="button" class="wz-btn-ghost" id="wzBack4_0">
-                                <span class="material-symbols-outlined">arrow_back</span> Back
-                            </button>
-                            <div class="wz-footer-right">
-                                <button type="button" class="wz-btn-outline" id="wzTestSandbox">
-                                    <span class="material-symbols-outlined">science</span> Test in Sandbox
-                                </button>
-                                <button type="button" class="wz-btn-primary wz-btn-lg" id="wzLaunchBtn">
-                                    <span class="material-symbols-outlined">rocket_launch</span>
-                                    Launch Chatbot
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 4.1 — AI Sandbox Testing                      -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage4_1" data-step="4" data-sub="1">
-                        <div class="wz-sandbox-layout">
-                            <!-- Sidebar: Bot Specs -->
-                            <aside class="wz-sandbox-sidebar">
-                                <div class="wz-card">
-                                    <div class="wz-card-body">
-                                        <h3>Bot Specs</h3>
-                                        <div class="wz-spec-group">
-                                            <label class="wz-label">Model Configuration</label>
-                                            <div class="wz-spec-item">
-                                                <span class="material-symbols-outlined">psychology</span>
-                                                <div>
-                                                    <strong>GPT-4o</strong>
-                                                    <small>Latest optimized model</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="wz-spec-group">
-                                            <label class="wz-label">System Persona</label>
-                                            <div class="wz-spec-item">
-                                                <span class="material-symbols-outlined">person</span>
-                                                <span id="wzSandboxPersona">Helpful Assistant</span>
-                                            </div>
-                                        </div>
-                                        <div class="wz-spec-group">
-                                            <label class="wz-label">Active Sources</label>
-                                            <div class="wz-spec-item">
-                                                <span class="material-symbols-outlined">link</span>
-                                                <span id="wzSandboxSource">Website content</span>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="wz-btn-outline wz-btn-full" id="wzResetChat">
-                                            <span class="material-symbols-outlined">refresh</span> Reset Chat Session
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="wz-sandbox-notice">
-                                    <p>This environment is for testing purposes. Messages are recorded for quality
-                                        assurance.</p>
-                                </div>
-                            </aside>
-
-                            <!-- Main: Chat -->
-                            <div class="wz-sandbox-main">
-                                <div class="wz-card wz-chat-card">
-                                    <div class="wz-chat-header">
-                                        <div class="wz-chat-status">
-                                            <span class="wz-online-dot"></span>
-                                            <h3>Sandbox Preview</h3>
-                                        </div>
-                                        <span class="wz-latency-badge">latency: --</span>
-                                    </div>
-                                    <div class="wz-chat-area" id="wzChatArea">
-                                        <div class="wz-chat-bubble bot">
-                                            <div class="wz-chat-avatar"><span
-                                                    class="material-symbols-outlined">smart_toy</span></div>
-                                            <div>
-                                                <span class="wz-chat-sender">AI BOT</span>
-                                                <div class="wz-chat-msg">Hello! I am your helpful assistant. How can I
-                                                    help you test my capabilities today?</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="wz-chat-input">
-                                        <input type="text" id="wzChatInput" class="wz-input"
-                                            placeholder="Type a message to test...">
-                                        <button type="button" id="wzChatSendBtn" class="wz-btn-primary wz-btn-icon">
-                                            <span class="material-symbols-outlined">send</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="wz-page-footer">
-                            <button type="button" class="wz-btn-ghost" id="wzBack4_1">
-                                <span class="material-symbols-outlined">arrow_back</span> Back to Checklist
-                            </button>
-                            <button type="button" class="wz-btn-primary wz-btn-lg" id="wzFinalLaunch">
-                                <span class="material-symbols-outlined">rocket_launch</span>
-                                Launch Now
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- PAGE 4.2 — Launch Success 🎉                       -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <div class="wz-page" id="wzPage4_2" data-step="4" data-sub="2">
-                        <div class="wz-celebrate">
-                            <div class="wz-celebrate-icon">🚀</div>
-                            <h1 class="wz-celebrate-title">Your AI Assistant is Live!</h1>
-                            <p class="wz-celebrate-desc">Congratulations! Your intelligent assistant is now active and
-                                ready to engage with your visitors.</p>
-
-                            <div class="wz-card wz-celebrate-card">
-                                <div class="wz-card-body" style="text-align:center;">
-                                    <label class="wz-label">Your Public Assistant URL</label>
-                                    <div class="wz-url-copy">
-                                        <input type="text" id="wzPublicUrl" class="wz-input" readonly
-                                            value="https://assistant.example.com/your-bot">
-                                        <button type="button" class="wz-btn-primary" id="wzCopyUrl">
-                                            <span class="material-symbols-outlined">content_copy</span> Copy
-                                        </button>
-                                    </div>
-
-                                    <div class="wz-share-row">
-                                        <span>Share on:</span>
-                                        <button class="wz-share-btn" title="LinkedIn"><ion-icon
-                                                name="logo-linkedin"></ion-icon></button>
-                                        <button class="wz-share-btn" title="Twitter"><ion-icon
-                                                name="logo-twitter"></ion-icon></button>
-                                        <button class="wz-share-btn" title="Facebook"><ion-icon
-                                                name="logo-facebook"></ion-icon></button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="wz-celebrate-actions">
-                                <button type="button" class="wz-btn-primary wz-btn-lg" id="wzGoToDashboard">
-                                    <span class="material-symbols-outlined">dashboard</span>
-                                    Go to Dashboard
-                                </button>
-                                <button type="button" class="wz-btn-outline" id="wzViewOnSite">
-                                    <span class="material-symbols-outlined">open_in_new</span>
-                                    View on Website
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div><!-- /.wz-content -->
-            </main>
-
-            <!-- ── Wizard Footer ─────────────────────────────────── -->
-            <footer class="wz-footer">
-                <p>Secure Connection • Powered by Universal AI</p>
-            </footer>
-
-        </div><!-- /.wz-root -->
-    </div><!-- /#connectionWizard -->
-
-
-    <div id="toast" class="toast">Action Successful</div>
-    <!-- Connection Settings Modal (Edit Mode) -->
-    <div id="connectionSettings" class="modal">
-        <div class="settings-container"
-            style="background: var(--bg-card); width: 800px; max-width: 90vw; height: 80vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-xl);">
-            <!-- Header -->
-            <div
-                style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h2 style="margin: 0;">Connection Settings</h2>
-                    <div id="settingsSubtitle" style="color: var(--text-muted); font-size: 0.9rem;"></div>
+            <div class="metrics-grid">
+                <div class="neu-card">
+                    <div class="metric-label">Total Conversations</div>
+                    <div id="anaTotalConvs" class="metric-value">-</div>
                 </div>
-                <button id="closeSettingsBtn" class="btn btn-text">✕</button>
+                <div class="neu-card">
+                    <div class="metric-label">Avg. Messages/Chat</div>
+                    <div id="anaAvgMsg" class="metric-value">-</div>
+                </div>
+                <div class="neu-card">
+                    <div class="metric-label">Avg. Confidence</div>
+                    <div id="anaAvgConf" class="metric-value">-</div>
+                </div>
             </div>
 
-            <!-- Body -->
-            <div style="flex: 1; display: flex; overflow: hidden;">
-                <!-- Sidebar Tabs -->
-                <div
-                    style="width: 200px; background: rgba(0,0,0,0.2); padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border-right: 1px solid var(--border-color);">
-                    <button class="tab-btn active" data-tab="general">General</button>
-                    <button class="tab-btn" data-tab="knowledge">Knowledge <span id="pendingCount" class="badge-mini"
-                            style="display:none">0</span></button>
-                    <button class="tab-btn" data-tab="behavior">Behavior</button>
-                    <div style="flex:1"></div>
-                    <button class="tab-btn" data-tab="explainability">Explainability</button>
-                    <button class="tab-btn danger" data-tab="danger">Danger Class</button>
+            <div class="two-col-grid" style="margin-top: 24px;">
+                <div class="neu-card">
+                    <h3>Conversation Volume</h3>
+                    <div
+                        style="height: 300px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.02); border-radius: 8px;">
+                        <p style="color: var(--text-tertiary);">Chart Placeholder (Volume)</p>
+                    </div>
+                </div>
+                <div class="neu-card">
+                    <h3>Topic Distribution</h3>
+                    <div
+                        style="height: 300px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.02); border-radius: 8px;">
+                        <p style="color: var(--text-tertiary);">Chart Placeholder (Topics)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="settingsView" class="hidden">
+            <header class="header">
+                <div class="page-title">
+                    <h1>Global Settings</h1>
+                    <p>Manage account and platform configurations.</p>
+                </div>
+            </header>
+
+            <div class="neu-card" style="max-width: 800px;">
+                <h2 class="section-title">Account</h2>
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" value="admin@example.com" class="input-neu" disabled>
+                </div>
+                <div class="input-group">
+                    <label>API Key (Master)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="password" value="sk_live_master_key_hidden" class="input-neu" disabled>
+                        <button class="btn-neu">Reveal</button>
+                    </div>
                 </div>
 
-                <!-- Content Area -->
-                <div class="tab-content-area" style="flex: 1; padding: 2rem; overflow-y: auto;">
+                <h2 class="section-title" style="margin-top: 30px;">Platform Defaults</h2>
+                <div class="input-group">
+                    <label>Default Model</label>
+                    <select class="input-neu">
+                        <option>GPT-4o (Recommended)</option>
+                        <option>GPT-3.5 Turbo</option>
+                        <option>Claude 3.5 Sonnet</option>
+                    </select>
+                </div>
 
-                    <!-- TAB: General -->
-                    <div class="tab-pane active" id="tab-general">
-                        <h3>General Information</h3>
-                        <br>
-                        <form id="editGeneralForm" style="display: grid; gap: 15px;">
-                            <label>Connection ID</label>
-                            <input type="text" id="editConnId" readonly
-                                style="background: rgba(255,255,255,0.05); cursor: not-allowed;">
+                <h2 class="section-title" style="margin-top: 30px;">Team</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">User management is disabled in this
+                    version.</p>
 
-                            <label>Website Name</label>
-                            <input type="text" id="editWebName">
+                <div style="text-align: right; margin-top: 20px;">
+                    <button class="btn-neu primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
 
-                            <label>Website URL</label>
-                            <input type="url" id="editWebUrl">
+    </main>
+
+    <!-- NEW CONNECTION WORKFLOW (Modal) -->
+    <div id="workflowContainer" class="workflow-container">
+        <div class="workflow-modal modal-content" style="width: 800px; max-width: 95%;">
+
+            <!-- Header & Progress Sticky Section -->
+            <div style="padding: 24px 24px 0; background: var(--bg-body); z-index: 10;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="font-size: 1.5rem;">New AI Connection</h2>
+                        <p style="color:var(--text-secondary); font-size:0.9rem;">Follow the steps to launch your
+                            enterprise chatbot.</p>
+                    </div>
+                    <button id="btnCloseWorkflow" class="btn-icon">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="step-indicator" style="margin-bottom: 20px;">
+                    <div class="step-dot active" id="dotStep1">1</div>
+                    <div class="step-dot" id="dotStep2">2</div>
+                    <div class="step-dot" id="dotStep3">3</div>
+                    <div class="step-dot" id="dotStep4">4</div>
+                    <div class="step-dot" id="dotStep5">5</div>
+                    <div class="step-dot" id="dotStep6">6</div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+
+
+                <!-- STEP 1: CONNECT WEBSITE -->
+                <div id="step1" class="workflow-step active">
+                    <div class="two-col-grid" style="grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <!-- Left Column: Create Identity -->
+                        <div>
+                            <h3 style="margin-bottom: 5px;">Connect Your Website</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">
+                                Name your AI assistant and we'll generate the integration code.
+                            </p>
+
+                            <div class="input-group">
+                                <label style="font-weight: 600;">Connection Name <span
+                                        style="color: var(--error);">*</span></label>
+                                <input type="text" id="inpSiteName" class="input-neu"
+                                    placeholder="e.g. Acme Corp Support Bot" maxlength="64">
+                                <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">
+                                    This is how your bot appears in the admin panel.
+                                </p>
+                            </div>
+
+                            <button id="btnCreateIdentity" class="btn-neu"
+                                style="width: 100%; color: var(--accent); margin-top: 15px; padding: 14px;">
+                                <span class="material-symbols-outlined">bolt</span>
+                                Generate Connection
+                            </button>
+                        </div>
+
+                        <!-- Right Column: Install & Verify -->
+                        <div id="colConnect" style="opacity: 0.4; pointer-events: none; transition: all 0.3s;">
+                            <h3 style="margin-bottom: 5px;">Install Widget</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">
+                                Add this snippet to your website's <code>&lt;head&gt;</code> tag.
+                            </p>
+
+                            <!-- Snippet Display -->
+                            <div class="code-block" id="codeSnippet"
+                                style="min-height: 80px; font-size: 0.75rem; background: var(--bg-elevated); padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; word-break: break-all; border: 1px solid var(--border-subtle);">
+                                &lt;!-- Snippet appears after creation --&gt;
+                            </div>
+                            <button id="btnCopyCode" class="btn-neu"
+                                style="width: 100%; margin-top: 8px; margin-bottom: 16px;">
+                                <span class="material-symbols-outlined">content_copy</span> Copy Snippet
+                            </button>
+
+                            <!-- Handshake Status -->
+                            <div class="neu-card" id="handshakeCard" style="text-align: center; padding: 20px;">
+                                <div id="handshakeIcon" style="margin-bottom: 8px;">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 32px; color: var(--text-tertiary);">
+                                        pending
+                                    </span>
+                                </div>
+                                <div id="verifyStatus" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">
+                                    Waiting for creation…
+                                </div>
+                                <div id="handshakeHint" style="font-size: 0.8rem; color: var(--text-tertiary);">
+                                    Your widget will check in automatically once installed.
+                                </div>
+                                <div id="handshakeTimer"
+                                    style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 8px;">
+                                </div>
+
+                                <!-- Retry Button (hidden initially) -->
+                                <button id="btnRetryHandshake" class="btn-neu hidden"
+                                    style="width: 100%; margin-top: 12px; color: var(--warning);">
+                                    <span class="material-symbols-outlined">refresh</span> Regenerate Key & Retry
+                                </button>
+                            </div>
+
+                            <!-- Next Button (blocked until handshake) -->
+                            <button id="btnStep1Next" class="btn-neu"
+                                style="width: 100%; margin-top: 16px; padding: 14px; color: var(--primary);" disabled>
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                                Next: Train Knowledge Base
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: LET AI LEARN -->
+                <div id="step2" class="workflow-step">
+                    <h3 style="margin-bottom: 6px;">
+                        <span class="material-symbols-outlined"
+                            style="vertical-align: middle; color: var(--primary);">school</span>
+                        Let AI Learn
+                    </h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">
+                        Provide your website URL so the AI can discover and learn from your content.
+                    </p>
+
+                    <div class="two-col-grid" style="gap: 24px; align-items: start;">
+                        <!-- LEFT: Input + Controls -->
+                        <div>
+                            <div class="neu-card" style="padding: 24px;">
+                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Website URL</label>
+                                <input type="url" id="inpLearnUrl" class="input-neu"
+                                    placeholder="https://yourwebsite.com" style="margin-bottom: 16px; width: 100%;">
+
+                                <button id="btnStartLearn" class="primary"
+                                    style="width: 100%; padding: 14px; font-weight: 600;">
+                                    <span class="material-symbols-outlined"
+                                        style="vertical-align: middle; margin-right: 6px;">rocket_launch</span>
+                                    Start Learning
+                                </button>
+
+                                <!-- Phase Indicator -->
+                                <div id="learnPhaseCard" class="hidden"
+                                    style="margin-top: 20px; padding: 16px; border-radius: 12px; background: var(--bg-secondary); text-align: center;">
+                                    <div id="learnPhaseIcon" style="margin-bottom: 8px;">
+                                        <span class="material-symbols-outlined fa-spin"
+                                            style="font-size: 32px; color: var(--primary);">progress_activity</span>
+                                    </div>
+                                    <p id="learnPhaseText" style="font-weight: 600; margin-bottom: 4px;">Discovering
+                                        pages...</p>
+                                    <p id="learnPhaseHint" style="font-size: 0.8rem; color: var(--text-tertiary);">This
+                                        may
+                                        take 30–60 seconds depending on site size.</p>
+                                </div>
+
+                                <!-- Retry Button (hidden by default) -->
+                                <button id="btnRetryLearn" class="btn-neu hidden"
+                                    style="width: 100%; margin-top: 12px; color: var(--warning);">
+                                    <span class="material-symbols-outlined"
+                                        style="vertical-align: middle;">refresh</span>
+                                    Retry Learning
+                                </button>
+                            </div>
+
+                            <!-- Manual methods toggle -->
+                            <details style="margin-top: 16px;" class="neu-card" id="manualLearnMethods">
+                                <summary
+                                    style="cursor: pointer; font-weight: 600; padding: 12px; color: var(--text-secondary);">
+                                    <span class="material-symbols-outlined"
+                                        style="vertical-align: middle; font-size: 18px;">tune</span>
+                                    Manual Methods (File / Paste)
+                                </summary>
+                                <div style="padding: 0 16px 16px;">
+                                    <!-- File Upload -->
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="font-weight: 600; font-size: 0.85rem;">Upload File (PDF, TXT,
+                                            DOCX)</label>
+                                        <input type="file" id="inpFile" class="hidden" accept=".pdf,.txt,.docx">
+                                        <button onclick="document.getElementById('inpFile').click()" class="btn-neu"
+                                            style="margin-top: 6px; width: 100%;">
+                                            <span class="material-symbols-outlined"
+                                                style="vertical-align: middle;">upload_file</span> Select File
+                                        </button>
+                                        <div id="fileNameDisplay"
+                                            style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 4px;">No
+                                            file
+                                            selected</div>
+                                        <button id="btnUploadFile" class="primary" disabled
+                                            style="width: 100%; margin-top: 8px; padding: 10px;">Upload &
+                                            Extract</button>
+                                    </div>
+                                    <!-- Manual Paste -->
+                                    <div>
+                                        <label style="font-weight: 600; font-size: 0.85rem;">Paste Knowledge</label>
+                                        <input type="text" id="inpPasteTitle" class="input-neu"
+                                            placeholder="Title (e.g. Return Policy)" style="margin-top: 6px;">
+                                        <textarea id="inpPasteContent" class="input-neu" rows="4"
+                                            placeholder="Paste content..." style="margin-top: 8px;"></textarea>
+                                        <button id="btnSavePaste" class="primary"
+                                            style="width: 100%; margin-top: 8px; padding: 10px;">Save & Extract</button>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- RIGHT: Learning Dashboard -->
+                        <div id="learnDashboard" style="opacity: 0.4; pointer-events: none;">
+                            <div class="neu-card" style="padding: 24px;">
+                                <h4 style="margin-bottom: 16px; color: var(--text-primary);">
+                                    <span class="material-symbols-outlined"
+                                        style="vertical-align: middle; color: var(--primary);">monitoring</span>
+                                    Learning Progress
+                                </h4>
+
+                                <!-- Stats Grid -->
+                                <div
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                                    <div
+                                        style="background: var(--bg-secondary); border-radius: 10px; padding: 14px; text-align: center;">
+                                        <span id="statDiscovered"
+                                            style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">0</span>
+                                        <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">
+                                            Pages
+                                            Found</p>
+                                    </div>
+                                    <div
+                                        style="background: var(--bg-secondary); border-radius: 10px; padding: 14px; text-align: center;">
+                                        <span id="statIndexed"
+                                            style="font-size: 1.8rem; font-weight: 700; color: var(--success, #22c55e);">0</span>
+                                        <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">
+                                            Pages
+                                            Learned</p>
+                                    </div>
+                                    <div
+                                        style="background: var(--bg-secondary); border-radius: 10px; padding: 14px; text-align: center;">
+                                        <span id="statFailed"
+                                            style="font-size: 1.8rem; font-weight: 700; color: var(--error, #ef4444);">0</span>
+                                        <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">
+                                            Failed
+                                        </p>
+                                    </div>
+                                    <div
+                                        style="background: var(--bg-secondary); border-radius: 10px; padding: 14px; text-align: center;">
+                                        <span id="statKnowledge"
+                                            style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">0</span>
+                                        <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">
+                                            Knowledge Items</p>
+                                    </div>
+                                </div>
+
+                                <!-- Coverage Bar -->
+                                <label
+                                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Coverage</label>
+                                <div
+                                    style="background: var(--bg-tertiary, #1a1a2e); border-radius: 8px; height: 10px; margin-top: 6px; overflow: hidden;">
+                                    <div id="coverageFill"
+                                        style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 8px; transition: width 0.6s ease;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                    <span id="coveragePercent"
+                                        style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">0%</span>
+                                    <span style="font-size: 0.7rem; color: var(--text-tertiary);">Min 30%
+                                        required</span>
+                                </div>
+
+                                <!-- Threshold Indicators -->
+                                <div id="thresholdIndicators" style="margin-top: 16px; font-size: 0.8rem;">
+                                    <div id="threshPages"
+                                        style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--text-tertiary);">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 16px;">radio_button_unchecked</span>
+                                        <span>Minimum 3 pages learned</span>
+                                    </div>
+                                    <div id="threshCoverage"
+                                        style="display: flex; align-items: center; gap: 6px; color: var(--text-tertiary);">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 16px;">radio_button_unchecked</span>
+                                        <span>Minimum 30% coverage</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Extraction Review Panel (Fix 4) -->
+                            <div id="extractionReviewPanel" style="display: none; margin-top: 18px;">
+                                <h4
+                                    style="margin-bottom: 10px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 18px; color: var(--primary);">checklist</span>
+                                    Extracted Data — Review
+                                    <span id="extractionPendingBadge" class="risk-badge medium"
+                                        style="font-size: 0.65rem; padding: 2px 8px;">0 PENDING</span>
+                                </h4>
+                                <div id="extractionReviewList"
+                                    style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Dynamically populated extraction cards -->
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Button (blocked) -->
+                <div style="text-align: center; margin-top: 24px;">
+                    <button id="btnStep2Next" class="btn-neu" disabled
+                        style="padding: 14px 36px; font-weight: 600; font-size: 1rem; color: var(--primary); opacity: 0.5;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">arrow_forward</span>
+                        Next: Tune Behavior
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- STEP 3: BRAND DETECTION & BEHAVIOR -->
+            <div id="step3" class="workflow-step">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h3 style="margin-bottom: 6px;">
+                            <span class="material-symbols-outlined"
+                                style="vertical-align: middle; color: var(--primary); margin-right: 8px;">fingerprint</span>
+                            Brand Identity & Assets
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                            Configure your chatbot's visual identity and personality traits.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3a. BRAND ASSETS (Favicon/Logo) -->
+                <div class="neu-card" style="margin-bottom: 32px; padding: 24px;">
+                    <h4 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem;">
+                        <span class="material-symbols-outlined"
+                            style="vertical-align: middle; margin-right: 8px; font-size: 20px;">image</span>
+                        Brand Assets
+                    </h4>
+
+                    <div style="display: flex; align-items: center; gap: 24px;">
+                        <!-- Preview -->
+                        <div style="text-align: center;">
+                            <div
+                                style="width: 64px; height: 64px; border-radius: 12px; background: var(--bg-body); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; overflow: hidden;">
+                                <img id="imgFaviconPreview" src="/favicon.ico" alt="Favicon"
+                                    style="width: 32px; height: 32px; object-fit: contain;">
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Favicon</div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div style="flex: 1;">
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                <button class="btn-neu" onclick="document.getElementById('inpFaviconUpload').click()"
+                                    style="padding: 10px 20px;">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 18px; vertical-align: middle; margin-right: 6px;">upload</span>
+                                    Upload Icon
+                                </button>
+                                <input type="file" id="inpFaviconUpload" hidden accept="image/*"
+                                    onchange="handleFaviconUpload(this)">
+
+                                <button class="btn-neu" id="btnFetchBranding" onclick="fetchBrandingAssets()"
+                                    style="padding: 10px 20px;">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 18px; vertical-align: middle; margin-right: 6px;">language</span>
+                                    Fetch from Website
+                                </button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+                                Upload a PNG, JPG, or ICO file (max 2MB). Or fetch automatically from your website URL.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3b. BRAND PERSONALITY -->
+                <h4 style="margin-bottom: 16px; font-size: 1rem;">
+                    <span class="material-symbols-outlined"
+                        style="vertical-align: middle; margin-right: 8px; font-size: 20px;">psychology</span>
+                    Brand Personality
+                </h4>
+
+                <!-- Detect Button -->
+                <div id="brandDetectSection" style="text-align: center; margin-bottom: 24px;">
+                    <button id="btnDetectBrand" class="btn-neu primary" onclick="detectBrand()"
+                        style="padding: 14px 32px; font-size: 1rem; font-weight: 600;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">auto_awesome</span>
+                        Detect Brand Profile
+                    </button>
+                    <div id="brandDetectSpinner" style="display: none; margin-top: 12px;">
+                        <div class="spinner" style="margin: 0 auto;"></div>
+                        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 0.85rem;">Analyzing your
+                            website content...</p>
+                    </div>
+                </div>
+
+                <!-- Brand Profile Card -->
+                <div id="brandProfileCard" style="display: none;">
+                    <!-- AI Reasoning -->
+                    <div id="brandReasoning" class="neu-card"
+                        style="margin-bottom: 16px; padding: 12px 16px; background: rgba(79,70,229,0.05); border-left: 3px solid var(--primary);">
+                        <span class="material-symbols-outlined"
+                            style="vertical-align: middle; color: var(--primary); font-size: 18px;">psychology</span>
+                        <span id="brandReasoningText" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
+                    </div>
+
+                    <div class="two-col-grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <!-- Left Column: Core Profile -->
+                        <div>
+                            <label>Industry</label>
+                            <select id="inpBrandIndustry" class="input-neu" disabled>
+                                <option value="E-Commerce">E-Commerce</option>
+                                <option value="SaaS">SaaS</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Education">Education</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Real Estate">Real Estate</option>
+                                <option value="Marketing Agency">Marketing Agency</option>
+                                <option value="Restaurant">Restaurant</option>
+                                <option value="Legal">Legal</option>
+                                <option value="Non-Profit">Non-Profit</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                            <label>Tone</label>
+                            <select id="inpBrandTone" class="input-neu" disabled>
+                                <option value="Professional">Professional</option>
+                                <option value="Friendly">Friendly</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Technical">Technical</option>
+                                <option value="Sales-Oriented">Sales-Oriented</option>
+                            </select>
+
+                            <label>Primary Goal</label>
+                            <select id="inpBrandGoal" class="input-neu" disabled>
+                                <option value="Support">Support</option>
+                                <option value="Lead Generation">Lead Generation</option>
+                                <option value="Education">Education</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Engagement">Engagement</option>
+                            </select>
+
+                            <label>Sales Intensity</label>
+                            <div id="brandSalesIntensity" style="display: flex; gap: 10px; margin-bottom: 16px;">
+                                <label class="radio-pill">
+                                    <input type="radio" name="salesIntensity" value="Low" disabled>
+                                    <span>Low</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="salesIntensity" value="Medium" disabled>
+                                    <span>Medium</span>
+                                </label>
+                                <label class="radio-pill">
+                                    <input type="radio" name="salesIntensity" value="High" disabled>
+                                    <span>High</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Identity -->
+                        <div>
+                            <label>Assistant Role</label>
+                            <input type="text" id="inpBrandRole" class="input-neu" placeholder="e.g. Product Advisor"
+                                disabled>
 
                             <label>Assistant Name</label>
-                            <input type="text" id="editAssistName">
+                            <input type="text" id="inpBrandName" class="input-neu" placeholder="e.g. Aria" disabled>
 
-                            <button type="submit" class="btn primary"
-                                style="justify-self: start; margin-top: 10px;">Save Changes</button>
-                        </form>
-                    </div>
-
-                    <!-- TAB: Knowledge -->
-                    <div class="tab-pane" id="tab-knowledge">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h3>Knowledge Hub</h3>
-                            <button class="btn secondary" onclick="triggerExtraction()">Scan Website</button>
-                        </div>
-
-                        <!-- Pending Review Section -->
-                        <div id="pendingSection" style="margin-bottom: 2rem;">
-                            <h4 style="color: var(--warning);">⚠️ Pending Approval</h4>
-                            <div id="pendingList" style="display: grid; gap: 10px; margin-top: 10px;">
-                                <!-- Dynamic Items -->
-                                <div
-                                    style="padding: 1rem; border: 1px dashed var(--border-color); text-align: center; color: var(--text-muted); border-radius: 8px;">
-                                    No pending items.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Active Knowledge -->
-                        <div>
-                            <h4>Active Knowledge</h4>
-                            <!-- Placeholder for now -->
-                            <p style="color: var(--text-muted);">Active knowledge base items will appear here.</p>
+                            <label>Welcome Message</label>
+                            <textarea id="inpBrandWelcome" class="input-neu" rows="2" placeholder="Hi! How can I help?"
+                                disabled></textarea>
                         </div>
                     </div>
 
-                    <!-- TAB: Behavior -->
-                    <div class="tab-pane" id="tab-behavior">
+                    <!-- Override Toggle -->
+                    <div style="margin-top: 16px; display: flex; align-items: center; gap: 10px;">
+                        <label class="toggle-switch" style="margin-bottom: 0;">
+                            <input type="checkbox" id="chkBrandOverride" onchange="toggleBrandOverride()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">I want to customize these
+                            values</span>
+                    </div>
 
-                        <!-- Brand Health Section -->
-                        <div id="brandHealthSection"
-                            style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <ion-icon name="finger-print-outline"
-                                        style="font-size: 1.3rem; color: var(--ai-indigo);"></ion-icon>
-                                    <strong>Brand Health</strong>
-                                    <span id="brandDriftBadge"
-                                        style="font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; background: rgba(76,175,80,0.2); color: var(--success); font-weight: 600;">
-                                        ✓ ALIGNED
-                                    </span>
-                                </div>
-                                <div style="display: flex; gap: 6px;">
-                                    <button class="btn secondary" id="checkDriftBtn"
-                                        style="font-size: 0.75rem; padding: 4px 10px;">
-                                        Check Drift
-                                    </button>
-                                    <button class="btn primary" id="reanalyzeBrandBtn"
-                                        style="font-size: 0.75rem; padding: 4px 10px; display: none;">
-                                        Re-analyze Brand
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="brandDriftInfo" style="font-size: 0.8rem; color: var(--text-muted);">
-                                <span>Last analysis: </span><span id="brandLastAnalysis">--</span>
-                            </div>
-                            <div id="brandDriftDetails"
-                                style="display: none; margin-top: 10px; padding: 10px; background: rgba(255,193,7,0.08); border-radius: 8px; border: 1px solid rgba(255,193,7,0.25); font-size: 0.8rem;">
+                    <!-- Accept / Re-detect Actions -->
+                    <div style="display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end;">
+                        <button class="btn-neu" onclick="detectBrand()" style="font-size: 0.9rem;">
+                            <span class="material-symbols-outlined"
+                                style="vertical-align: middle; font-size: 18px;">refresh</span>
+                            Re-detect
+                        </button>
+                        <button id="btnAcceptBrand" class="btn-neu primary" onclick="acceptBrandProfile()"
+                            style="padding: 12px 28px; font-weight: 600;">
+                            <span class="material-symbols-outlined" style="vertical-align: middle;">check_circle</span>
+                            Accept Profile
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Accepted Confirmation -->
+                <div id="brandAcceptedBanner" class="neu-card"
+                    style="display: none; text-align: center; padding: 16px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3);">
+                    <span class="material-symbols-outlined" style="color: #22c55e; font-size: 32px;">verified</span>
+                    <p style="margin: 8px 0 0; font-weight: 600; color: #22c55e;">Brand Profile Accepted</p>
+                </div>
+
+                <!-- Next Button (blocked until accepted) -->
+                <div style="text-align: center; margin-top: 24px;">
+                    <button id="btnStep3Next" class="btn-neu" disabled onclick="step3Next()"
+                        style="padding: 14px 36px; font-weight: 600; font-size: 1rem; color: var(--primary); opacity: 0.5;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">arrow_forward</span>
+                        Next: Test Chat
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 4: TEST ASSISTANT -->
+            <div id="step4" class="workflow-step">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <h3 style="margin: 0;">
+                        <span class="material-symbols-outlined"
+                            style="vertical-align: middle; color: var(--primary);">science</span>
+                        Test Assistant
+                    </h3>
+                    <div id="testCounter" class="test-counter">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">chat</span>
+                        <span id="testCounterText">0 / 3</span>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                    Test your assistant with real questions. Debug mode shows AI metadata on every response.
+                    <strong>Minimum 3 interactions required to proceed.</strong>
+                </p>
+
+                <!-- Drift Warning Banner -->
+                <div id="driftWarningBanner"
+                    style="display: none; margin-bottom: 16px; padding: 12px 16px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: 10px;">
+                    <span class="material-symbols-outlined"
+                        style="vertical-align: middle; color: #f87171; font-size: 20px;">warning</span>
+                    <span id="driftWarningText"
+                        style="font-size: 0.85rem; color: #f87171; font-weight: 600; margin-left: 6px;">
+                        Critical drift detected — resolve before launching.
+                    </span>
+                </div>
+
+                <!-- Debug Chat Simulator -->
+                <div class="chat-preview"
+                    style="height: 420px; margin-bottom: 16px; display: flex; flex-direction: column;">
+                    <div class="chat-messages" id="testChatMessages" style="flex: 1; overflow-y: auto;">
+                        <div class="msg-bot">
+                            <span style="font-size: 0.9rem;">👋 I'm your assistant in <strong>debug mode</strong>. Ask
+                                anything — you'll see confidence, sources, and gating results for each response.</span>
+                        </div>
+                    </div>
+                    <div class="chat-input-area" style="padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.05);">
+                        <input type="text" id="inpTestChat" placeholder="Ask a test question..." class="input-neu"
+                            style="margin-bottom: 0;" onkeydown="if(event.key==='Enter') sendTestChat()">
+                        <button id="btnSendTestChat" class="btn-neu primary" onclick="sendTestChat()"
+                            style="padding: 10px 16px; min-width: auto;">
+                            <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feedback Summary -->
+                <div id="feedbackSummary" style="display: none; margin-bottom: 16px; text-align: center;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                        Feedback:
+                        <span id="feedbackUpCount" style="color: #22c55e; font-weight: 600;">0</span> 👍
+                        <span id="feedbackDownCount"
+                            style="color: #f87171; font-weight: 600; margin-left: 8px;">0</span> 👎
+                    </span>
+                </div>
+
+                <!-- Next Button (gated) -->
+                <div style="text-align: center; margin-top: 8px;">
+                    <button id="btnStep4Next" class="btn-neu" disabled onclick="step4Next()"
+                        style="padding: 14px 36px; font-weight: 600; font-size: 1rem; color: var(--primary); opacity: 0.5;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">arrow_forward</span>
+                        Next: Widget Appearance
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 5: WIDGET (Appearance) -->
+            <div id="step5" class="workflow-step">
+                <h3 style="margin-bottom: 20px;">Widget Appearance</h3>
+                <div class="two-col-grid" style="gap: 30px;">
+                    <div>
+                        <label>Widget Title</label>
+                        <input type="text" id="wizTitle" class="input-neu" placeholder="Support Bot">
+
+                        <label>Primary Color</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" id="wizColor" value="#4f46e5"
+                                style="height: 40px; width: 60px; border: none; cursor: pointer;">
+                            <span id="wizColorVal">#4f46e5</span>
+                        </div>
+                    </div>
+                    <div class="neu-card"
+                        style="background: var(--bg-body); display: flex; align-items: center; justify-content: center; height: 200px;">
+                        <p style="color: var(--text-tertiary);">Live Preview</p>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button onclick="saveWidgetStep()" class="btn-neu primary">Save & Continue</button>
+                </div>
+            </div>
+
+            <!-- STEP 6: LAUNCH -->
+            <div id="step6" class="workflow-step">
+                <div id="launchPreView" style="text-align: center; padding: 30px 20px;">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 56px; color: var(--primary); margin-bottom: 12px;">rocket_launch</span>
+                    <h2 style="margin-bottom: 4px;">Pre-Launch Validation</h2>
+                    <p style="color: var(--text-secondary); max-width: 420px; margin: 0 auto 24px; font-size: 0.9rem;">
+                        All checks must pass before you can launch. This action is <strong>irreversible</strong>.
+                    </p>
+
+                    <!-- Dynamic Checklist -->
+                    <div id="launchChecklist" class="neu-card"
+                        style="max-width: 400px; margin: 0 auto 24px; text-align: left;">
+                        <div class="launch-check-row" id="check_coverage">
+                            <span class="check-icon material-symbols-outlined">hourglass_empty</span>
+                            <div>
+                                <div class="check-label">Content Coverage</div>
+                                <div class="check-detail" id="detail_coverage">Checking...</div>
                             </div>
                         </div>
-
-                        <!-- AI Safety Policy Section -->
-                        <div
-                            style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-                                <ion-icon name="shield-checkmark-outline"
-                                    style="font-size: 1.3rem; color: var(--success);"></ion-icon>
-                                <strong>AI Safety Policy</strong>
-                            </div>
-
-                            <div style="display: flex; flex-direction: column; gap: 14px;">
-                                <div>
-                                    <label
-                                        style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
-                                        Minimum Confidence
-                                        <span id="confSliderVal"
-                                            style="color: var(--text-main); font-weight: 600;">65%</span>
-                                    </label>
-                                    <input type="range" id="policyMinConfidence" min="0" max="100" value="65"
-                                        style="width: 100%; margin-top: 4px; accent-color: var(--ai-indigo);"
-                                        oninput="document.getElementById('confSliderVal').textContent = this.value + '%'">
-                                </div>
-
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted);">Minimum Source
-                                        Count</label>
-                                    <input type="number" id="policyMinSources" min="0" max="10" value="1"
-                                        style="width: 100%; padding: 6px 10px; margin-top: 4px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px;">
-                                </div>
-
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted);">Low Confidence
-                                        Action</label>
-                                    <select id="policyAction"
-                                        style="width: 100%; padding: 6px 10px; margin-top: 4px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px;">
-                                        <option value="SOFT_ANSWER">Soft Answer (with disclaimer)</option>
-                                        <option value="REFUSE">Refuse to Answer</option>
-                                        <option value="CLARIFY">Ask for Clarification</option>
-                                        <option value="ESCALATE">Escalate to Human</option>
-                                    </select>
-                                </div>
-
-                                <button class="btn primary" id="savePolicyBtn"
-                                    style="font-size: 0.8rem; align-self: flex-end; padding: 6px 18px;">
-                                    <ion-icon name="save-outline" style="margin-right: 4px;"></ion-icon> Save Policy
-                                </button>
+                        <div class="launch-check-row" id="check_branding">
+                            <span class="check-icon material-symbols-outlined">hourglass_empty</span>
+                            <div>
+                                <div class="check-label">Brand Alignment</div>
+                                <div class="check-detail" id="detail_branding">Checking...</div>
                             </div>
                         </div>
-
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                            <h3 style="margin: 0;">Behaviour Health</h3>
-                            <button class="btn secondary" id="refreshBehaviorBtn" style="font-size: 0.8rem;">
-                                <ion-icon name="refresh-outline"></ion-icon> Refresh Metrics
-                            </button>
-                        </div>
-
-                        <!-- Metric Cards -->
-                        <div id="behaviorMetricsGrid"
-                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem;">
-                            <div
-                                style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid var(--border-color);">
-                                <div id="bmAvgConfidence"
-                                    style="font-size: 1.8rem; font-weight: 700; color: var(--success);">--</div>
-                                <div
-                                    style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Avg Confidence</div>
-                            </div>
-                            <div
-                                style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid var(--border-color);">
-                                <div id="bmAvgLength"
-                                    style="font-size: 1.8rem; font-weight: 700; color: var(--ai-indigo);">--</div>
-                                <div
-                                    style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Avg Response Length</div>
-                            </div>
-                            <div
-                                style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid var(--border-color);">
-                                <div id="bmSalesTriggers"
-                                    style="font-size: 1.8rem; font-weight: 700; color: var(--warning);">--</div>
-                                <div
-                                    style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Sales Triggers</div>
-                            </div>
-                            <div
-                                style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid var(--border-color);">
-                                <div id="bmFeedbackRatio"
-                                    style="font-size: 1.8rem; font-weight: 700; color: var(--success);">--</div>
-                                <div
-                                    style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Feedback (+ / -)</div>
+                        <div class="launch-check-row" id="check_testing">
+                            <span class="check-icon material-symbols-outlined">hourglass_empty</span>
+                            <div>
+                                <div class="check-label">Test Interactions</div>
+                                <div class="check-detail" id="detail_testing">Checking...</div>
                             </div>
                         </div>
-
-                        <!-- Extra Stats Row -->
-                        <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; font-size: 0.8rem;">
-                            <div
-                                style="flex:1; padding: 8px 12px; background: rgba(0,0,0,0.15); border-radius: 6px; display: flex; justify-content: space-between;">
-                                <span style="color: var(--text-muted);">Conversations</span>
-                                <span id="bmTotalConv" style="font-weight: 600;">0</span>
-                            </div>
-                            <div
-                                style="flex:1; padding: 8px 12px; background: rgba(0,0,0,0.15); border-radius: 6px; display: flex; justify-content: space-between;">
-                                <span style="color: var(--text-muted);">Low Confidence</span>
-                                <span id="bmLowConf" style="font-weight: 600; color: var(--warning);">0</span>
+                        <div class="launch-check-row" id="check_confidence">
+                            <span class="check-icon material-symbols-outlined">hourglass_empty</span>
+                            <div>
+                                <div class="check-label">Confidence Policy</div>
+                                <div class="check-detail" id="detail_confidence">Checking...</div>
                             </div>
                         </div>
-
-                        <!-- Suggestions Section -->
-                        <div style="margin-top: 0.5rem;">
-                            <h4 style="margin-bottom: 1rem;">
-                                <ion-icon name="bulb-outline"
-                                    style="vertical-align: middle; margin-right: 6px; color: var(--warning);"></ion-icon>
-                                Optimisation Suggestions
-                            </h4>
-                            <div id="behaviorSuggestionsList" style="display: flex; flex-direction: column; gap: 10px;">
-                                <div
-                                    style="padding: 1rem; border: 1px dashed var(--border-color); text-align: center; color: var(--text-muted); border-radius: 8px; font-size: 0.85rem;">
-                                    No suggestions yet. Metrics refresh needed.
-                                </div>
+                        <div class="launch-check-row" id="check_drift">
+                            <span class="check-icon material-symbols-outlined">hourglass_empty</span>
+                            <div>
+                                <div class="check-label">Drift Status</div>
+                                <div class="check-detail" id="detail_drift">Checking...</div>
                             </div>
-                        </div>
-
-                        <!-- Manual Override: Tone -->
-                        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
-                            <h4
-                                style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                Manual Override</h4>
-                            <label>Tone</label>
-                            <select id="editTone"
-                                style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px;">
-                                <option value="neutral">Neutral & Helpful</option>
-                                <option value="formal">Professional & Formal</option>
-                                <option value="friendly">Friendly & Casual</option>
-                                <option value="enthusiastic">High Energy Sales</option>
-                            </select>
                         </div>
                     </div>
 
-                    <!-- TAB: Explainability -->
-                    <div class="tab-pane" id="tab-explainability">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3>Explainability</h3>
-                            <div class="filter-pills">
-                                <button class="pill active" data-filter="ALL">All</button>
-                                <button class="pill" data-filter="AT_RISK">At-Risk</button>
-                                <button class="pill" data-filter="SAFE">Safe</button>
-                            </div>
-                        </div>
-                        <br>
+                    <button id="btnLaunch" class="btn-neu primary" disabled
+                        style="font-size: 1.15rem; padding: 16px 48px; opacity: 0.5;" onclick="launchConnection()">
+                        <span class="material-symbols-outlined"
+                            style="vertical-align: middle; margin-right: 6px;">rocket_launch</span>
+                        Launch Chatbot
+                    </button>
+                </div>
 
-                        <div id="answerList" style="display: flex; flex-direction: column; gap: 1rem;">
-                            <div class="spinner"></div>
+                <!-- Post-Launch Success (hidden initially) -->
+                <div id="launchSuccessView" style="display: none; text-align: center; padding: 40px 20px;">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 72px; color: #22c55e; margin-bottom: 16px;">check_circle</span>
+                    <h2 style="color: #22c55e; margin-bottom: 8px;">🚀 Chatbot Launched!</h2>
+                    <p id="launchTimestamp"
+                        style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">
+                    </p>
+                    <div class="neu-card" style="max-width: 400px; margin: 0 auto 24px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span class="material-symbols-outlined" style="color: #22c55e; font-size: 18px;">lock</span>
+                            <span style="font-weight: 600;">Wizard locked</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                            Your chatbot is now live and serving production traffic.
+                            Use the <strong>Edit</strong> panel to make changes.
+                        </p>
+                    </div>
+                    <button class="btn-neu" onclick="closeWorkflow(); loadConnections();" style="padding: 12px 32px;">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">dashboard</span>
+                        Back to Dashboard
+                    </button>
+                </div>
+            </div>
+
+        </div> <!-- End modal-body -->
+    </div>
+    </div>
+
+
+
+
+    <!-- EDITOR VIEW -->
+    <div id="editorView" style="display: none; padding: 30px; max-width: 1400px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="btn-icon" onclick="closeEditor()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <div class="avatar-circle" id="editorAvatar" style="width: 48px; height: 48px; font-size: 1.5rem;">B
+                </div>
+                <div>
+                    <h1 id="editorBotName" style="margin: 0; font-size: 1.5rem;">Bot Name</h1>
+                    <a id="editorBotLink" href="#" target="_blank"
+                        style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">link</span>
+                        <span id="editorBotUrl">github.com/portfolio-bot</span>
+                    </a>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-neu" onclick="syncBot()" id="btnSyncBot">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">sync</span>
+                    Sync Bot
+                </button>
+                <button class="btn-neu primary" onclick="publishChanges()" id="btnPublishChanges">
+                    Publish Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Editor Grid -->
+        <div class="editor-grid">
+            <!-- Col 1: Business Details -->
+            <div class="editor-card">
+                <div class="card-header-accent"></div>
+                <h3>Business Details</h3>
+
+                <label>Assistant Name</label>
+                <input type="text" id="editName" class="input-neu">
+
+                <label>System Prompt (Instructions)</label>
+                <textarea id="editPrompt" class="input-neu" rows="8"
+                    style="resize: vertical; min-height: 150px; font-family: sans-serif;"></textarea>
+
+                <div style="text-align: right; margin-top: 16px;">
+                    <button class="btn-neu" onclick="saveConnectionChanges()" style="width:100%">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">save</span>
+                        Save Tunings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Col 2: AI Behavior -->
+            <div class="editor-card">
+                <div class="card-header-accent blue"></div>
+                <h3>AI Behavior</h3>
+
+                <label>Assistant Tone</label>
+                <select id="editTone" class="input-neu">
+                    <option value="Professional">Professional & Friendly</option>
+                    <option value="Casual">Casual & Witty</option>
+                    <option value="Technical">Technical & Precise</option>
+                    <option value="Sales">Sales-Oriented</option>
+                </select>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label>Max Tokens</label>
+                        <input type="number" id="editTokens" class="input-neu">
+                    </div>
+                    <div>
+                        <label>Confidence</label>
+                        <input type="number" id="editConfidence" class="input-neu" step="0.1" max="1.0" min="0.1">
+                    </div>
+                </div>
+
+                <div class="info-box-blue">
+                    Adjusting confidence limits how much similarity is required before the AI attempts to answer.
+                </div>
+
+                <div style="text-align: center; margin-top: auto;">
+                    <button class="btn-neu" onclick="saveConnectionChanges()" style="width: 100%;">
+                        Update Behavior
+                    </button>
+                </div>
+            </div>
+
+            <!-- Col 3: Test Interaction -->
+            <div class="editor-card" style="grid-row: span 2;">
+                <div class="card-header-accent red"></div>
+                <h3>Test Interaction</h3>
+
+                <div id="editorChatContainer"
+                    style="flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 500px;">
+                    <div id="editorChatMessages" class="chat-messages"
+                        style="flex: 1; overflow-y: auto; padding: 10px; background: transparent;">
+                        <div class="msg-bot">
+                            <span style="font-size:0.9rem">Hello! I'm your Portfolio Assistant. How can I help you
+                                today?</span>
                         </div>
                     </div>
 
-                    <!-- TAB: Danger -->
-                    <div class="tab-pane" id="tab-danger">
-                        <h3 style="color: var(--error);">Danger Zone</h3>
-                        <p>Irreversible actions.</p>
-                        <button class="btn btn-danger-outline" id="deleteConnBtn">Delete Connection</button>
+                    <div class="chat-input-area"
+                        style="background: white; padding: 10px; border-radius: 12px; margin-top: 10px;">
+                        <input type="text" id="inpEditorChat" placeholder="Type a message..." class="input-neu"
+                            style="margin-bottom:0; border:none;" onkeydown="if(event.key==='Enter') sendEditorChat()">
+                        <button class="btn-icon" onclick="sendEditorChat()">
+                            <span class="material-symbols-outlined" style="color: var(--primary);">send</span>
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Row 2: Knowledge Base -->
+            <div class="editor-card" style="grid-column: span 2;">
+                <div class="card-header-accent purple"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Knowledge Base</h3>
+                    <button class="btn-neu small" onclick="triggerScan()">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">refresh</span> Re-Scan Website
+                    </button>
+                </div>
+
+                <div id="editorKnowledgeList"
+                    style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: var(--bg-body); border-radius: 12px; margin-top: 16px;">
+                    <div style="text-align: center; color: var(--text-tertiary);">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 48px; opacity: 0.5;">inventory_2</span>
+                        <p>Knowledge base is empty.</p>
+                        <button class="btn-link">Add Source</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missed Questions -->
+            <!-- Note: Depending on row span, this might need to change position. Currently relying on Grid auto-placement. -->
         </div>
     </div>
 
-    <!-- Explainability Drawer -->
-    <div id="explainabilityDrawer" class="drawer-right">
-        <div class="drawer-content">
-            <div class="drawer-header">
-                <h3>Answer Trace</h3>
-                <button id="closeDrawerBtn" class="btn btn-text">✕</button>
+
+    <!-- MONITOR DASHBOARD OVERLAY -->
+    <div id="monitorOverlay" class="monitor-overlay" style="display: none;">
+        <div class="monitor-panel neu-card">
+            <div class="monitor-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 28px; color: var(--primary);">monitoring</span>
+                    <div>
+                        <h2 id="monitorTitle" style="margin: 0; font-size: 1.2rem;">Monitor Dashboard</h2>
+                        <span id="monitorLaunchDate" style="font-size: 0.78rem; color: var(--text-secondary);"></span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="monitorRiskBadge" class="risk-badge low">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">shield</span>
+                        <span id="monitorRiskText">LOW</span>
+                    </div>
+                    <button class="btn-icon" onclick="closeMonitor()" style="font-size: 20px;">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
             </div>
-            <div id="drawerBody" style="padding: 1.5rem; overflow-y: auto;">
-                <!-- Dynamic Content -->
+
+            <!-- Red Alert Panel -->
+            <div id="monitorAlertPanel" class="monitor-alert" style="display: none;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">error</span>
+                <div>
+                    <strong>Attention Required</strong>
+                    <div id="monitorAlertText" style="font-size: 0.82rem; margin-top: 2px;"></div>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="monitor-grid">
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">forum</span>
+                    <div class="metric-val" id="monConversations">—</div>
+                    <div class="metric-label">Conversations</div>
+                </div>
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">verified</span>
+                    <div class="metric-val" id="monConfidence">—</div>
+                    <div class="metric-label">Avg Confidence</div>
+                </div>
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">pie_chart</span>
+                    <div class="metric-val" id="monCoverage">—</div>
+                    <div class="metric-label">Coverage</div>
+                </div>
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">warning</span>
+                    <div class="metric-val" id="monDrift">—</div>
+                    <div class="metric-label">Drift Alerts</div>
+                </div>
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">favorite</span>
+                    <div class="metric-val" id="monHealth">—</div>
+                    <div class="metric-label">Health Score</div>
+                </div>
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">palette</span>
+                    <div class="metric-val" id="monBrand">—</div>
+                    <div class="metric-label">Brand Alignment</div>
+                </div>
+                <div class="monitor-metric">
+                    <span class="material-symbols-outlined metric-icon">pending_actions</span>
+                    <div class="metric-val" id="monPending">—</div>
+                    <div class="metric-label">Extraction Pending</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="monitor-actions">
+                <button class="btn-neu" onclick="recalcCoverage()" id="btnRecalcCoverage">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 18px; vertical-align: middle;">refresh</span>
+                    Recalculate Coverage
+                </button>
+                <button class="btn-neu" onclick="reanalyzeBrand()" id="btnReanalyzeBrand">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 18px; vertical-align: middle;">auto_fix_high</span>
+                    Reanalyze Brand
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="admin.js"></script>
+    <!-- TOAST -->
+    <div id="toast"
+        style="position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: var(--bg-body); box-shadow: var(--shadow-light); border-radius: 50px; transform: translateY(100px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; font-weight: 600;">
+        Notification
+    </div>
+
+    <script src="/admin.js"></script>
 </body>
 
 </html>

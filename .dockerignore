@@ -1,13 +1,16 @@
+# Docker
 node_modules
 npm-debug.log
-.env
-.git
-.gitignore
 Dockerfile
 .dockerignore
-README.md
-tests
-*.log
+.git
+.gitignore
+
+# Environment
+.env
+.env.production
 .DS_Store
-tmp
-brain
+
+# Logs
+logs
+*.log

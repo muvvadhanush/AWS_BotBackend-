@@ -19,7 +19,7 @@ function getAIConfig() {
         return {
             baseURL: 'https://api.groq.com/openai/v1',
             apiKey: process.env.GROQ_API_KEY,
-            model: 'llama3-70b-8192'
+            model: 'llama-3.3-70b-versatile'
         };
     }
 
@@ -37,6 +37,12 @@ const client = new OpenAI({
     baseURL: config.baseURL
 });
 
+// Dedicated client for embeddings (Groq doesn't support them yet)
+const embeddingClient = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Always use OpenAI for embeddings
+    baseURL: 'https://api.openai.com/v1'
+});
+
 console.log(`[AI] Provider: ${AI_PROVIDER.toUpperCase()} | Model: ${config.model}`);
 
-module.exports = { client, model: config.model, provider: AI_PROVIDER };
+module.exports = { client, embeddingClient, model: config.model, provider: AI_PROVIDER };
