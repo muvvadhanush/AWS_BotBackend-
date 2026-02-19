@@ -63,7 +63,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
+
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow widget to be loaded by other sites
