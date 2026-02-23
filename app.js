@@ -56,6 +56,12 @@ app.use(cors({
       return callback(null, true);
     }
 
+    // Allow development tunnel providers (Pinggy, ngrok)
+    const isTunnel = [".pinggy.link", ".pinggy.io", ".ngrok.io", ".ngrok-free.app"].some(domain => origin.endsWith(domain));
+    if (isTunnel) {
+      return callback(null, true);
+    }
+
     logger.warn(`🚫 CORS Blocked: Origin "${origin}" is not in allowed list.`, {
       allowedOrigins,
       requestId: "CORS_CHECK"
