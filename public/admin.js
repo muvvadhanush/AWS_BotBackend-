@@ -337,15 +337,51 @@ function setupEventListeners() {
     // Close Modal
     document.getElementById('btnCloseWorkflow').addEventListener('click', closeWorkflow);
 
+    // Navigation View Switching
+    const navItems = {
+        'navDashboard': 'dashboardView',
+        'navConnections': 'dashboardView', // Connections also shows dashboard for now or could show a filtered list
+        'navAnalytics': 'analyticsView',
+        'btnThemeToggle': 'settingsView' // Settings icon opens settings
+    };
+
+    Object.entries(navItems).forEach(([id, viewId]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView(viewId);
+
+                // Active state for main nav items
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                if (el.classList.contains('nav-item')) el.classList.add('active');
+            });
+        }
+    });
+
     // Back Button
     const btnBack = document.getElementById('btnBackToDash');
     if (btnBack) {
         btnBack.addEventListener('click', () => {
-            document.getElementById('detailsView').classList.add('hidden');
-            document.getElementById('dashboardView').classList.remove('hidden');
+            switchView('dashboardView');
             activeConnectionId = null;
         });
     }
+}
+
+function switchView(viewId) {
+    const views = ['dashboardView', 'detailsView', 'analyticsView', 'settingsView'];
+    views.forEach(v => {
+        const el = document.getElementById(v);
+        if (el) {
+            if (v === viewId) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+    });
+
+    // Auto-refresh data if switching to specific views
+    if (viewId === 'dashboardView') loadConnections();
+    if (viewId === 'analyticsView') loadAnalytics();
 }
 
 // --- STATE (Already declared above) ---
