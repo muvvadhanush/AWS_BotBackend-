@@ -202,6 +202,14 @@ router.post("/:connectionId/auto-extract",
 
       if (!url) return res.status(400).json({ error: "URL is required" });
 
+      // BLOCK localhost extraction from server context
+      if (url.includes('localhost') || url.includes('127.0.0.1')) {
+        console.warn(`🛑 [BLOCKED] Localhost extraction attempted: ${url}`);
+        return res.status(400).json({
+          error: "LOCAL_FETCH_NOT_POSSIBLE",
+          details: "The server cannot access 'localhost'. Please use a public URL or ngrok to extract knowledge base from your local site."
+        });
+      }
       // 1. Scrape Metadata & Text
       const result = await scraperService.scrapeWebsite(url);
       if (!result.success) {

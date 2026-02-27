@@ -7,6 +7,7 @@ const promptService = require("../services/promptService");
 const aiService = require("../services/aiService");
 const { detectKnowledgeGap } = require("../services/gapDetectionService");
 const { sendSlackAlert } = require("../services/integrations/slackService");
+const tokenLogger = require("../utils/tokenLogger");
 
 // ===============================
 // Helper: Send Reply
@@ -288,9 +289,150 @@ const sendMessage = async (req, res) => {
 };
 
 // ===============================
+// Stream Chat Handler (Server-Sent Events)
+// ===============================
+const streamMessage = async (req, res) => {
+  // 1. Setup SSE Headers
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const sendEvent = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  try {
+    const { message, connectionId, sessionId, url } = req.body;
+
+    if (!message || !sessionId || !connectionId) {
+      sendEvent({ error: "Missing required fields" });
+      res.end();
+      return;
+    }
+
+    // 2. Validate connection
+    const connectionObj = await Connection.findOne({ where: { connectionId } });
+    if (!connectionObj) {
+      sendEvent({ error: "Invalid connection" });
+      res.end();
+      return;
+    }
+
+    // 3. Load or create session
+    let session = await ChatSession.findOne({ where: { sessionId } });
+    if (session && session.connectionId !== connectionId) {
+      sendEvent({ error: "Session validation failed" });
+      res.end();
+      return;
+    }
+
+    if (!session) {
+      session = await ChatSession.create({
+        sessionId,
+        connectionId,
+        messages: [],
+        currentStep: "NONE",
+        tempData: {},
+        mode: "FREE_CHAT"
+      });
+    }
+
+    let history = session.messages || [];
+    if (typeof history === "string") {
+      try {
+        history = JSON.parse(history);
+      } catch {
+        history = [];
+      }
+    }
+
+    // 4. AI Permission Check
+    let perms = connectionObj.permissions || {};
+    if (typeof perms === "string") {
+      try { perm = JSON.parse(perms); } catch { }
+    }
+
+    if (perms.aiEnabled === false) {
+      sendEvent({ token: "AI Chat is disabled.", done: true });
+      res.end();
+      return;
+    }
+
+    // 5. Assemble Prompt & Start Stream
+    const assembledPrompt = await promptService.assemblePrompt(connectionId, url, "");
+
+    const { stream, sources, model, provider } = await aiService.streamChat({
+      message,
+      history,
+      connectionId,
+      systemPrompt: assembledPrompt,
+      memory: session.memory
+    });
+
+    // 6. Send Metadata First (Sources)
+    let aiMetadata = { sources };
+    // Calculate aggregate confidence
+    let aggConfidence = null;
+    if (sources.length) {
+      const scores = sources.map(s => s.confidenceScore);
+      if (scores.length) aggConfidence = scores.reduce((a, b) => a + b, 0) / scores.length;
+    }
+
+    // Check Confidence Gating (Optional: if we want to block stream on low confidence,
+    // we have to buffer first chunk. For now, we stream and flag metadata)
+    try {
+      const policy = await ConfidencePolicy.findOne({ where: { connectionId } });
+      if (policy && aggConfidence !== null && aggConfidence < policy.minAnswerConfidence) {
+        aiMetadata.gated = true;
+        aiMetadata.confidenceScore = aggConfidence;
+        aiMetadata.lowConfidenceAction = policy.lowConfidenceAction;
+
+        // If REFUSE action, we might want to stop here.
+        if (policy.lowConfidenceAction === 'REFUSE') {
+          sendEvent({ token: "I'm not fully confident in that answer.", done: true, metadata: aiMetadata });
+          res.end();
+          return;
+        }
+      }
+    } catch (e) { }
+
+    sendEvent({ type: 'metadata', data: aiMetadata });
+
+    // 7. Stream Tokens
+    let fullReply = "";
+
+    for await (const chunk of stream) {
+      // Capture Token Usage (Last Chunk)
+      if (chunk.usage) {
+        tokenLogger.recordUsage({
+          connectionId: connectionId,
+          provider: provider,
+          model: model,
+          usage: chunk.usage,
+          context: 'stream_chat'
+        });
+      }
+
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        fullReply += content;
+        sendEvent({ token: content });
+      }
+    }
+
+  } catch (error) {
+    console.error("Stream Error:", error);
+    sendEvent({ error: "Internal Server Error" });
+    res.end();
+  }
+};
+
+// ===============================
 // Export
 // ===============================
 module.exports = {
   handleChat,
-  sendMessage
+  sendMessage,
+  streamMessage
 };

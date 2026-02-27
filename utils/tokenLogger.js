@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('./logger');
 
-const LOG_FILE_PATH = path.join(__dirname, '../data/token_usage.jsonl');
+
 
 /**
  * Records token usage to a local JSONL file.
@@ -24,7 +24,12 @@ exports.recordUsage = async (data) => {
 
         const line = JSON.stringify(entry) + '\n';
 
-        await fs.promises.appendFile(LOG_FILE_PATH, line, 'utf8');
+        // Determine log file based on provider
+        const providerName = (data.provider || 'unknown').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const filename = `token_usage_${providerName}.jsonl`;
+        const logFilePath = path.join(__dirname, '../data', filename);
+
+        await fs.promises.appendFile(logFilePath, line, 'utf8');
 
         // Also log to standard logger for redundancy
         logger.info('Token Usage Recorded', {

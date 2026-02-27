@@ -26,7 +26,7 @@ const onboardingRoutes = require("../onboardingRoutes");
 // ===================================================
 router.use(
   "/chat",
-  limiters.widgetChat,
+  // limiters.widgetChat, // Moved to inside chatRoutes for granular control
   chatRoutes
 );
 

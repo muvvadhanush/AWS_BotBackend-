@@ -26,15 +26,22 @@
     return;
   }
 
-  // Determine Base URL (Config > Script Origin > Default)
+  // Determine Base URL (Config > Script Origin > Current Origin)
   let baseUrl = config.apiUrl || config.backendUrl;
   if (!baseUrl) {
-    // Auto-detect from script src if possible, else fallback
     const script = document.currentScript || document.querySelector('script[src*="widget.js"]');
-    if (script && script.src.startsWith('http')) {
-      baseUrl = new URL(script.src).origin;
-    } else {
-      baseUrl = 'http://13.48.43.200'; // Fallback
+    if (script && script.src) {
+      if (script.src.startsWith('http')) {
+        baseUrl = new URL(script.src).origin;
+      } else if (script.src.startsWith('//')) {
+        baseUrl = window.location.protocol + script.src;
+        baseUrl = new URL(baseUrl).origin;
+      }
+    }
+
+    // Final fallback to the current document origin if still empty (common for relative scripts)
+    if (!baseUrl) {
+      baseUrl = window.location.origin;
     }
   }
   baseUrl = baseUrl.replace(/\/$/, "");
@@ -499,6 +506,109 @@
         opacity: 1;
         transform: scale(1.1);
       }
+      
+      /* Streaming Cursor & Pulse */
+      .typing-pulse {
+        min-width: 40px;
+        min-height: 20px;
+      }
+      .typing-pulse::after {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 14px;
+        background: currentColor;
+        margin-left: 2px;
+        animation: blink 1s infinite;
+        vertical-align: middle;
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      
+      /* Markdown Styles */
+      .msg-bubble p { margin: 0 0 8px 0; }
+      .msg-bubble p:last-child { margin: 0; }
+      
+      .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 { margin: 12px 0 6px 0; font-weight: 700; color: var(--if-text); }
+      .msg-bubble h3 { font-size: 1.1em; }
+      .msg-bubble h2 { font-size: 1.2em; }
+      
+      .msg-bubble ul, .msg-bubble ol { margin: 4px 0; padding-left: 24px; }
+      .msg-bubble li { margin-bottom: 4px; }
+      
+      /* Code Blocks */
+      .msg-bubble pre { 
+        background: #1e1e1e; /* Dark theme default for code */
+        color: #d4d4d4;
+        padding: 0; 
+        border-radius: 8px; 
+        overflow: hidden;
+        margin: 10px 0;
+        font-family: 'Consolas', 'Monaco', monospace; 
+        font-size: 12px;
+        border: 1px solid rgba(0,0,0,0.1);
+      }
+      .msg-bubble .code-header {
+        background: #2d2d2d;
+        color: #a0a0a0;
+        padding: 4px 10px;
+        font-size: 10px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #3d3d3d;
+        display: flex;
+        justify-content: space-between;
+      }
+      .msg-bubble code.language- {
+        display: block;
+        padding: 10px;
+        overflow-x: auto;
+      }
+      
+      /* Inline Code */
+      .msg-bubble code.inline {
+        background: rgba(0,0,0,0.06);
+        color: #e01e5a;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+
+      /* Progressive Disclosure (Details/Summary) */
+      .msg-bubble details {
+        background: rgba(0,0,0,0.03);
+        border-radius: 8px;
+        padding: 8px;
+        margin: 8px 0;
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+      .msg-bubble summary {
+        cursor: pointer;
+        font-weight: 600;
+        outline: none;
+        color: var(--if-primary);
+      }
+      .msg-bubble .details-content {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        font-size: 0.95em;
+        color: #4b5563;
+      }
+
+      .msg-bubble b { font-weight: 700; color: inherit; }
+      .msg-bubble i { font-style: italic; }
+      .msg-bubble a { color: var(--if-primary); text-decoration: underline; font-weight: 500; }
+      .msg-bubble a:hover { opacity: 0.8; }
+      
+      /* Dark Mode Overrides for text elements */
+      @media (prefers-color-scheme: dark) {
+        .msg-bubble .details-content { color: #d1d5db; }
+        .msg-bubble pre { border-color: #333; }
+        .msg-bubble code.inline { background: rgba(255,255,255,0.1); color: #ff7b72; }
+      }
     </style>
 
     <div id="welcome-bubble">
@@ -720,17 +830,102 @@
     });
   }
 
+  // --- ADVANCED MARKDOWN PARSER ---
+  function parseMarkdown(text) {
+    // 1. Pre-processing: Escape HTML (but keep our own markers if any)
+    let html = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // 2. Code Blocks (Pre-formatted)
+    // ```language\ncode\n```
+    html = html.replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
+      return `<pre><div class="code-header">${lang || 'code'}</div><code class="language-${lang}">${code.trim()}</code></pre>`;
+    });
+
+    // 3. Inline Code
+    html = html.replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
+
+    // 4. Headers
+    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+
+    // 5. Text Styling
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    html = html.replace(/__([^_]+)__/g, '<b>$1</b>');
+    html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+    html = html.replace(/_([^_]+)_/g, '<i>$1</i>');
+
+    // 6. Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    // 7. Unordered Lists
+    // Match line starting with -, *, or +
+    html = html.replace(/^\s*[-*+]\s+(.*)$/gm, '<li>$1</li>');
+    // Wrap adjacent <li>'s in <ul>
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // 8. Ordered Lists
+    html = html.replace(/^\s*\d+\.\s+(.*)$/gm, '<li class="ord">$1</li>');
+    html = html.replace(/(<li class="ord">.*<\/li>)/s, '<ol>$1</ol>');
+
+    // 9. Tables (Simple GFM)
+    // | Header | Header |
+    // | --- | --- |
+    // | Cell | Cell |
+    // Logic: Look for lines with pipes. This is complex to do with simple Regex, 
+    // but we can catch a basic table structure.
+    // For simplicity in this widget, we'll skip complex table parsing to avoid bloat, 
+    // unless user explicitly requests complex tables. 
+    // Plan: Render tables as <pre> for now or simple grid if needed.
+
+    // 10. Progressive Disclosure (Details/Summary)
+    // ::: Summary Text \n Content \n :::
+    html = html.replace(/::: (.+?)\n([\s\S]+?)\n:::/g, '<details><summary>$1</summary><div class="details-content">$2</div></details>');
+
+    // 11. Newlines to <br> (Handle block-level elements to avoid extra spacing)
+    // First, temporarily remove newlines inside tags we just created to prevent double spacing
+    const blocks = ['ul', 'ol', 'pre', 'h1', 'h2', 'h3', 'details'];
+
+    // Replace newline with <br> ONLY if not preceded/followed by a block tag
+    // This is a heuristic. A robust parser handles AST.
+    html = html.replace(/\n/g, '<br>');
+
+    // Cleanup: Remove <br> around block tags
+    blocks.forEach(tag => {
+      const reStart = new RegExp(`<br><${tag}`, 'g');
+      const reEnd = new RegExp(`</${tag}><br>`, 'g');
+      html = html.replace(reStart, `<${tag}`).replace(reEnd, `</${tag}>`);
+    });
+
+    return html;
+  }
+
   async function sendMessage(textOverride) {
     const text = textOverride || input.value.trim();
     if (!text) return;
 
+    // 1. User Message
     addMessage(text, "user");
     input.value = "";
-    showSuggestions([]); // Hide suggestions while loading
-    showTyping();
+    showSuggestions([]); // Hide suggestions
+
+    // 2. Setup Bot Message Placeholder
+    const botMsgId = Date.now().toString();
+    // Create an empty bot message immediately
+    const div = document.createElement("div");
+    div.className = "msg bot";
+    div.innerHTML = `<div class="msg-bubble typing-pulse"></div>`; // Start with a pulse
+    messages.appendChild(div);
+    scrollToBottom();
+
+    const bubbleContent = div.querySelector(".msg-bubble");
+    let fullText = "";
 
     try {
-      const res = await fetch(`${baseUrl}/api/v1/chat/send`, {
+      const response = await fetch(`${baseUrl}/api/v1/chat/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -741,37 +936,89 @@
         })
       });
 
-      hideTyping();
+      if (!response.ok) throw new Error("Server Error");
 
-      if (!res.ok) {
-        showError("Server busy. Please try again in a moment.");
-        return;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      bubbleContent.classList.remove("typing-pulse"); // Remove pulse once stream starts
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop(); // Keep partial line
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.replace("data: ", "");
+            if (dataStr === "[DONE]") return; // Standard OpenAI format (just in case)
+
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (data.token) {
+                fullText += data.token;
+
+                // Check for Quick Reply Delimiter
+                const splitParts = fullText.split('|||');
+                const visibleText = splitParts[0];
+
+                // Render Markdown incrementally (only the visible part)
+                bubbleContent.innerHTML = parseMarkdown(visibleText);
+                scrollToBottom();
+
+                // If we have suggestions (part 2), parse them
+                if (splitParts.length > 1) {
+                  const rawSuggestions = splitParts[1];
+                  const suggestions = rawSuggestions.split('|').filter(s => s.trim().length > 0);
+                  if (suggestions.length > 0) {
+                    showSuggestions(suggestions);
+                  }
+                }
+              }
+
+              if (data.done) {
+                // Finalize
+              }
+
+              if (data.error) {
+                bubbleContent.textContent = "Error: " + data.error;
+              }
+
+              // Handle Metadata (Sources, Gating)
+              if (data.type === 'metadata' && data.data) {
+                // We can store this to show sources later logic
+                // For now, just log
+                console.log("Sources:", data.data.sources);
+              }
+
+              // Handle Quick Replies from Metadata
+              if (data.type === 'metadata' && data.data) {
+                // Store metadata for later use or logging
+                // Example: if (data.data.confidenceScore < 0.7) { ... }
+              }
+
+            } catch (e) {
+              // Ignore parse errors for partial JSON
+            }
+          }
+        }
       }
 
-      const data = await res.json();
-
-      if (data.messages && data.messages.length) {
-        addMessage(data.messages[data.messages.length - 1].text, "bot", true, data.messageIndex);
-      }
-
-      if (data.suggestions && data.suggestions.length) {
-        showSuggestions(data.suggestions);
-      }
-
-      // --- HANDLE CLIENT ACTIONS ---
-      if (data.action) {
-        console.log("⚡ Executing Client Action:", data.action);
-        handleClientAction(data.action);
-      }
+      // Save full message to history (exclude suggestions from saved text)
+      const cleanText = fullText.split('|||')[0];
+      saveMessage(text, "user");
+      saveMessage(cleanText, "bot");
 
     } catch (e) {
-      hideTyping();
-      showError("Connection lost. Retrying in 3s...");
-      setTimeout(() => {
-        const lastErr = shadow.querySelector(".system-error-msg");
-        if (lastErr) lastErr.remove();
-        sendMessage(text);
-      }, 3000);
+      bubbleContent.textContent = "⚠️ Connection lost. Please try again.";
+      console.error(e);
     }
   }
 

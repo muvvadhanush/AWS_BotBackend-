@@ -40,12 +40,36 @@ const allowedOrigins = settings.allowedOrigins || [];
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow if no origin (e.g. mobile apps, curl) or in development
     if (!origin || settings.env === 'development') return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+
+    // Standardize origin for matching (remove trailing slash)
+    const cleanOrigin = origin.replace(/\/$/, "");
+
+    if (allowedOrigins.includes(cleanOrigin) || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    logger.warn(`CORS Blocked: Origin "${origin}" is not in allowed list.`, { allowedOrigins });
-    return callback(new Error("CORS_NOT_ALLOWED"));
+
+    // Additional check for the server's public IP (with or without port)
+    const serverIP = "98.130.121.189";
+    if (origin.includes(serverIP)) {
+      return callback(null, true);
+    }
+
+    // Allow development tunnel providers (Pinggy, ngrok)
+    const isTunnel = [".pinggy.link", ".pinggy.io", ".ngrok.io", ".ngrok-free.app"].some(domain => origin.endsWith(domain));
+    if (isTunnel) {
+      return callback(null, true);
+    }
+
+    logger.warn(`🚫 CORS Blocked: Origin "${origin}" is not in allowed list.`, {
+      allowedOrigins,
+      requestId: "CORS_CHECK"
+    });
+
+    const error = new Error("CORS_NOT_ALLOWED");
+    error.status = 403; // Forbidden
+    return callback(error);
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -53,6 +77,7 @@ app.use(cors({
 
 // Security Headers
 app.use(helmet({
+  hsts: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -67,6 +92,8 @@ app.use(helmet({
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow widget to be loaded by other sites
+  crossOriginOpenerPolicy: false,
+  originAgentCluster: false
 }));
 app.use((req, res, next) => {
   // Custom headers if needed (Helmet covers most)
@@ -109,6 +136,8 @@ app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "admin-ui", "d
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "admin-ui", "dist", "index.html")));
 // Uses regex instead of wildcard for nested routes in static React bundle
 app.get(/^\/admin\/.*/, (req, res) => res.sendFile(path.join(__dirname, "admin-ui", "dist", "index.html")));
+
+// ===== 404 Handler =====
 app.use((req, res) => {
   const requestId = req.requestId || uuidv4();
   logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`, { requestId });

@@ -20,6 +20,12 @@ router.post(
     chatController.sendMessage
 );
 
+// Stream chat endpoint (SSE)
+router.post(
+    "/stream",
+    limiters.widgetChat,
+    chatController.streamMessage
+);
 // ===============================
 // 2️⃣ Welcome Endpoint (Widget)
 // ===============================
@@ -65,35 +71,42 @@ router.get(
                     domains = [domains];
                 }
 
-                if (!domains.includes("*")) {
-                    if (!originHeader) {
-                        return res.status(403).json({
-                            error: "DOMAIN_NOT_ALLOWED"
-                        });
-                    }
-
-                    const requestHost =
-                        new URL(originHeader).hostname;
-
-                    const isAllowed = domains.some((allowed) => {
-                        try {
-                            const allowedHost = new URL(
-                                allowed.startsWith("http")
-                                    ? allowed
-                                    : `https://${allowed}`
-                            ).hostname;
-
-                            return requestHost === allowedHost;
-                        } catch {
-                            return false;
-                        }
+                // ALLOW if: 1. No domains restricted yet, 2. Connection is in DRAFT, 3. "*" is present
+                if (domains.length === 0 || connection.status === 'DRAFT' || domains.includes("*")) {
+                    return res.json({
+                        welcomeMessage: connection.welcomeMessage,
+                        assistantName: connection.assistantName,
+                        theme: connection.theme,
+                        logoUrl: connection.logoUrl
                     });
+                }
 
-                    if (!isAllowed) {
-                        return res.status(403).json({
-                            error: "DOMAIN_NOT_ALLOWED"
-                        });
+                if (!originHeader) {
+                    return res.status(403).json({
+                        error: "DOMAIN_NOT_ALLOWED"
+                    });
+                }
+
+                const requestHost = new URL(originHeader).hostname;
+
+                const isAllowed = domains.some((allowed) => {
+                    try {
+                        const allowedHost = new URL(
+                            allowed.startsWith("http")
+                                ? allowed
+                                : `https://${allowed}`
+                        ).hostname;
+
+                        return requestHost === allowedHost;
+                    } catch {
+                        return false;
                     }
+                });
+
+                if (!isAllowed) {
+                    return res.status(403).json({
+                        error: "DOMAIN_NOT_ALLOWED"
+                    });
                 }
             }
 

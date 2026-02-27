@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Neural Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin.css"> <!-- Reusing Admin CSS for Neumorphism -->
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-body);
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: var(--radius-main);
+            background: var(--bg-body);
+            box-shadow: var(--shadow-light);
+            text-align: center;
+        }
+
+        .brand-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            display: inline-block;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .error-msg {
+            color: var(--error);
+            font-size: 0.9rem;
+            min-height: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="conn-card login-card" style="padding: 50px; border-radius: 32px; max-width: 450px;">
+        <div class="brand-logo" style="margin-bottom: 40px;">
+            <span style="color: var(--primary);">Neural</span>Bot
+        </div>
+
+        <div id="errorMsg" class="error-msg"></div>
+
+        <form id="loginForm" class="login-form">
+            <div style="text-align: left;">
+                <label
+                    style="font-weight: 600; margin-bottom: 12px; display: block; color: var(--text-secondary);">Username</label>
+                <input type="text" id="username" class="input-neu" required
+                    style="border-radius: 12px; padding: 15px 20px;">
+            </div>
+
+            <div style="text-align: left;">
+                <label
+                    style="font-weight: 600; margin-bottom: 12px; display: block; color: var(--text-secondary);">Password</label>
+                <input type="password" id="password" class="input-neu" required
+                    style="border-radius: 12px; padding: 15px 20px;">
+            </div>
+
+            <button type="submit" id="btnLogin" class="primary"
+                style="margin-top: 20px; width: 100%; border-radius: 12px;">
+                Secure Sign In
+            </button>
+        </form>
+    </div>
+
+    <!-- Theme Toggle for Login Page -->
+    <button id="btnThemeToggle" class="btn-icon" style="position: fixed; top: 20px; right: 20px;">
+        <span class="material-symbols-outlined" id="themeIcon"></span>
+    </button>
+
+    <script src="/login.js"></script>
+</body>
+
+</html>
