@@ -119,788 +119,508 @@
   shadow.innerHTML = `
     <style>
       :host {
-        --if-bg: #ffffff;
+        /* Premium Design Tokens */
+        --if-primary: #6d5dfc;
+        --if-primary-glow: rgba(109, 93, 252, 0.4);
+        --if-bg-glass: rgba(255, 255, 255, 0.75);
+        --if-bg-glass-dark: rgba(17, 24, 39, 0.8);
         --if-text: #1f2937;
-        --if-primary: #22819A;
-        --if-secondary: #90C2E7;
-        --if-accent: #AC58E9;
-        --if-shadow: 0 10px 30px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08);
+        --if-text-mute: #6b7280;
+        --if-border: rgba(255, 255, 255, 0.4);
+        --if-border-dark: rgba(255, 255, 255, 0.1);
+        --if-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+        --if-radius: 24px;
+        --if-font: 'Inter', system-ui, -apple-system, sans-serif;
+        
+        --transition-fluid: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
+
       @media (prefers-color-scheme: dark) {
         :host {
-          --if-bg: #111827;
+          --if-bg-glass: var(--if-bg-glass-dark);
           --if-text: #f9fafb;
+          --if-text-mute: #9ca3af;
+          --if-border: var(--if-border-dark);
         }
       }
-      * {
-        box-sizing: border-box;
-      }
+
+      * { box-sizing: border-box; }
+
+      /* --- Launch Button --- */
       #btn {
         width: 68px;
         height: 68px;
         border-radius: 22px;
-        background: #6d5dfc;
+        background: var(--if-primary);
         color: #fff;
         font-size: 28px;
         border: none;
         cursor: pointer;
-        box-shadow: 0 12px 32px rgba(109, 93, 252, 0.3);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 12px 32px var(--if-primary-glow);
+        transition: var(--transition-spring);
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         padding: 0;
-      }
-      #btn-logo {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.9;
+        z-index: 2;
       }
       #btn:hover {
-        transform: translateY(-5px) rotate(5deg);
-        box-shadow: 0 16px 40px rgba(109, 93, 252, 0.4);
+        transform: translateY(-6px) rotate(4deg) scale(1.05);
+        box-shadow: 0 16px 40px var(--if-primary-glow);
       }
+      #btn:active { transform: scale(0.95); }
+      #btn-logo { width: 100%; height: 100%; object-fit: cover; }
 
-      /* ===============================
-         Welcome Bubble — Image-1 Style
-         =============================== */
-
-            /* ===============================
-         Welcome Bubble — User Request Style
-         =============================== */
+      /* --- Welcome Bubble --- */
       #welcome-bubble {
-        position: absolute; /* Changed to absolute to be relative to container */
+        position: absolute;
         right: 0;
-        bottom: 85px; /* Adjust to sit above button */
-        
-        background: rgba(255, 255, 255, 0.82);
+        bottom: 85px;
+        background: var(--if-bg-glass);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        color: #1f2937;
-        padding: 14px 20px;
-        border-radius: 18px;
-        box-shadow: 0 12px 32px rgba(0,0,0,0.12);
-        max-width: 260px;
-        font-family: inherit;
+        color: var(--if-text);
+        padding: 14px 22px;
+        border-radius: 20px;
+        box-shadow: var(--if-shadow);
+        max-width: 280px;
+        font-family: var(--if-font);
         font-size: 14px;
         font-weight: 500;
-        animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        z-index: 10000;
+        border: 1px solid var(--if-border);
         opacity: 0;
-        transform: translateY(10px);
-        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        transform: translateY(15px);
+        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         pointer-events: none;
+        cursor: pointer;
+        z-index: 1;
       }
-
       #welcome-bubble.is-visible {
         opacity: 1;
         transform: translateY(0);
         pointer-events: auto;
       }
+      #welcome-bubble:hover { transform: translateY(-3px); }
 
-      /* Text */
-      #welcome-bubble span {
-        line-height: 1.4;
-      }
-
-      /* Close button - User didn't request one in this snippet, but good to keep or hide? 
-         The snippet implies it auto-hides, so maybe no close button needed. 
-         I will hide it CSS-wise just in case logic removes it. */
-      #welcome-bubble .bubble-close {
-        display: none;
-      }
-
-      /* Text */
-      #welcome-bubble span {
-        line-height: 1;
-      }
-
-      /* Close button */
-      #welcome-bubble .bubble-close {
-        width: 22px;
-        height: 22px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 50%;
-        border: none;
-        background: #e5e7eb;
-        color: #374151;
-
-        font-size: 14px;
-        cursor: pointer;
-      }
-
-      #welcome-bubble .bubble-close:hover {
-        background: #d1d5db;
-      }
-
+      /* --- Chat Panel --- */
       #panel {
         position: fixed;
         bottom: 100px;
         right: 20px;
-        width: 360px;
-        height: 540px;
-        background: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 24px;
-        display: none;
+        width: 380px;
+        height: 600px;
+        max-height: calc(100vh - 140px);
+        background: var(--if-bg-glass);
+        backdrop-filter: blur(25px) saturate(160%);
+        -webkit-backdrop-filter: blur(25px) saturate(160%);
+        border-radius: var(--if-radius);
+        display: flex;
         flex-direction: column;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: var(--if-shadow);
+        font-family: var(--if-font);
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--if-border);
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+        visibility: hidden;
+        transition: var(--transition-fluid);
+        z-index: 10;
       }
+      #panel.is-open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        visibility: visible;
+      }
+
+      /* --- Header --- */
       #header {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        color: #1a1a1a;
-        padding: 20px;
+        padding: 24px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
+        background: rgba(255, 255, 255, 0.1);
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       }
-      .avatar-circle {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: #6d5dfc;
+      
+      /* Unified Single Logo/Avatar */
+      #header-identity {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: var(--if-primary);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 1.2rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 1.3rem;
+        box-shadow: 0 6px 16px var(--if-primary-glow);
         flex-shrink: 0;
+        overflow: hidden;
       }
-      #header-info {
-        flex: 1;
+      #header-identity img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
+
+      #header-info { flex: 1; }
       #header-name {
-        font-weight: 700;
-        font-size: 16px;
-        letter-spacing: -0.3px;
+        font-weight: 750;
+        font-size: 17px;
+        letter-spacing: -0.4px;
+        color: var(--if-text);
         margin-bottom: 2px;
-        color: #1f2937;
       }
       #header-status {
-        font-size: 11px;
-        opacity: 0.7;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-size: 12px;
+        color: var(--if-text-mute);
         display: flex;
         align-items: center;
-        gap: 5px;
-        color: #4b5563;
+        gap: 6px;
+        font-weight: 600;
       }
       #status-dot {
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         background: #10b981;
         border-radius: 50%;
-        animation: pulse 2s infinite;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulse 2.5s infinite;
       }
       @keyframes pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.8); }
+        50% { opacity: 0.6; transform: scale(0.85); }
       }
       #close-btn {
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(0, 0, 0, 0.06);
         border: none;
-        color: #4b5563;
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
+        color: var(--if-text-mute);
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
-        transition: all 0.2s;
+        font-size: 18px;
+        transition: var(--transition-fluid);
       }
       #close-btn:hover {
         background: rgba(0, 0, 0, 0.1);
+        color: var(--if-text);
         transform: rotate(90deg);
       }
+
+      /* --- Messages --- */
       #messages {
         flex: 1;
-        padding: 20px;
+        padding: 24px;
         overflow-y: auto;
-        font-size: 14px;
-        background: transparent;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.1) transparent;
       }
+      #messages::-webkit-scrollbar { width: 5px; }
+      #messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
       .msg {
-        max-width: 85%;
-        animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        max-width: 88%;
+        animation: msgEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        opacity: 0;
+        transform: translateY(15px);
       }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(12px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+      @keyframes msgEnter {
+        to { opacity: 1; transform: translateY(0); }
       }
-      .msg.user {
-        margin-left: auto;
-        text-align: right;
-      }
+      .msg.user { margin-left: auto; }
+      
       .msg-bubble {
-        display: inline-block;
-        padding: 12px 16px;
-        border-radius: 18px;
-        line-height: 1.5;
+        padding: 14px 18px;
+        border-radius: 20px;
+        line-height: 1.6;
+        font-size: 14.5px;
         font-weight: 500;
+        word-wrap: break-word;
+        position: relative;
       }
       .msg.user .msg-bubble {
-        background: #6d5dfc;
+        background: var(--if-primary);
         color: white;
         border-bottom-right-radius: 4px;
-        box-shadow: 0 8px 16px rgba(109, 93, 252, 0.2);
+        box-shadow: 0 10px 20px var(--if-primary-glow);
       }
       .msg.bot .msg-bubble {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(4px);
-        color: #374151;
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--if-text);
         border-bottom-left-radius: 4px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+        border: 1px solid var(--if-border);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      }
+
+      /* --- Input Area --- */
+      #input-area {
+        padding: 20px 24px;
+        background: rgba(255, 255, 255, 0.2);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      #text {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid var(--if-border);
+        padding: 14px 20px;
+        border-radius: 18px;
+        outline: none;
+        font-size: 14px;
+        font-family: var(--if-font);
+        color: var(--if-text);
+        transition: var(--transition-fluid);
+      }
+      #text:focus {
+        background: white;
+        border-color: var(--if-primary);
+        box-shadow: 0 0 0 4px var(--if-primary-glow);
+      }
+      .send {
+        width: 48px;
+        height: 48px;
+        background: var(--if-primary);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-spring);
+        box-shadow: 0 8px 16px var(--if-primary-glow);
+      }
+      .send svg { width: 22px; height: 22px; }
+      .send:hover { transform: scale(1.08) rotate(-5deg); }
+      .send:active { transform: scale(0.92); }
+
+      /* --- Typing Indicator --- */
+      .typing {
+        display: flex;
+        gap: 4px;
+        padding: 12px 18px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 18px;
+        width: fit-content;
+        border: 1px solid var(--if-border);
+      }
+      .typing span {
+        width: 7px;
+        height: 7px;
+        background: var(--if-primary);
+        border-radius: 50%;
+        animation: typingBounce 1.4s infinite ease-in-out;
+      }
+      .typing span:nth-child(2) { animation-delay: 0.2s; }
+      .typing span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes typingBounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+        40% { transform: translateY(-6px); opacity: 1; }
+      }
+
+      /* Markdown & Content */
+      .msg-bubble p { margin: 0 0 10px 0; }
+      .msg-bubble p:last-child { margin: 0; }
+      .msg-bubble b { font-weight: 750; }
+      .msg-bubble a { color: var(--if-primary); text-decoration: none; font-weight: 600; }
+      .msg-bubble a:hover { text-decoration: underline; }
+
+      .msg-bubble pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 16px;
+        border-radius: 12px;
+        overflow-x: auto;
+        margin: 12px 0;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 13px;
+        line-height: 1.5;
       }
       
-      /* Suggestions */
+      .code-copy {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: #94a3b8;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .code-copy:hover { background: rgba(255,255,255,0.2); color: white; }
+
+      /* Suggestion Buttons */
       #suggestions {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        padding: 12px;
-        background: transparent;
-        overflow-x: auto;
+        gap: 10px;
+        padding: 0 24px 16px 24px;
       }
       .suggestion-btn {
-        background: rgba(255, 255, 255, 0.4);
-        border: 1px solid rgba(109, 93, 252, 0.3);
-        color: #6d5dfc;
+        background: rgba(109, 93, 252, 0.08);
+        border: 1px solid rgba(109, 93, 252, 0.2);
+        color: var(--if-primary);
         padding: 8px 16px;
         border-radius: 14px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
+        transition: var(--transition-fluid);
       }
       .suggestion-btn:hover {
-        background: #6d5dfc;
+        background: var(--if-primary);
         color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(109, 93, 252, 0.2);
-      }
-      
-      #input-area {
-        display: flex;
-        padding: 16px;
-        border-top: 1px solid rgba(0, 0, 0, 0.05);
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-      }
-      #text {
-        flex: 1;
-        background: rgba(255, 255, 255, 0.5);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        padding: 12px 18px;
-        border-radius: 14px;
-        outline: none;
-        font-size: 14px;
-        transition: all 0.2s;
-        color: #1f2937;
-      }
-      #text:focus {
-        background: white;
-        border-color: #6d5dfc;
-        box-shadow: 0 0 0 4px rgba(109, 93, 252, 0.1);
-      }
-      .send {
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        background: #6d5dfc;
-        color: white;
-        border-radius: 12px;
-        margin-left: 10px;
-        font-weight: 700;
-        transition: all 0.2s;
-        box-shadow: 0 4px 12px rgba(109, 93, 252, 0.3);
-      }
-      .send:hover {
-        background: #5b4cfc;
-        transform: scale(1.05);
-        box-shadow: 0 6px 16px rgba(109, 93, 252, 0.4);
-      }
-      
-      .typing {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 10px 14px;
-        background: white;
-        border-radius: 16px;
-        width: fit-content;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      }
-      .typing span {
-        width: 8px;
-        height: 8px;
-        background: #667eea;
-        border-radius: 50%;
-        animation: bounce 1.4s infinite ease-in-out;
-      }
-      .typing span:nth-child(1) { animation-delay: -0.32s; }
-      .typing span:nth-child(2) { animation-delay: -0.16s; }
-      @keyframes bounce {
-        0%, 80%, 100% { transform: scale(0); }
-        40% { transform: scale(1); }
-      }
-      .system-error {
-        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-      }
-      @keyframes shake {
-        10%, 90% { transform: translate3d(-1px, 0, 0); }
-        20%, 80% { transform: translate3d(2px, 0, 0); }
-        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-        40%, 60% { transform: translate3d(4px, 0, 0); }
-      }
-      .feedback-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 4px;
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-      .msg.bot:hover .feedback-actions {
-        opacity: 1;
-      }
-      .feedback-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-        opacity: 0.5;
-        padding: 2px;
-        transition: transform 0.2s, opacity 0.2s;
-      }
-      .feedback-btn:hover {
-        opacity: 1;
-        transform: scale(1.2);
-      }
-      .feedback-btn.active {
-        opacity: 1;
-        transform: scale(1.1);
-      }
-      
-      /* Streaming Cursor & Pulse */
-      .typing-pulse {
-        min-width: 40px;
-        min-height: 20px;
-      }
-      .typing-pulse::after {
-        content: '';
-        display: inline-block;
-        width: 6px;
-        height: 14px;
-        background: currentColor;
-        margin-left: 2px;
-        animation: blink 1s infinite;
-        vertical-align: middle;
-      }
-      @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
-      }
-      
-      /* Markdown Styles */
-      .msg-bubble p { margin: 0 0 8px 0; }
-      .msg-bubble p:last-child { margin: 0; }
-      
-      .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 { margin: 12px 0 6px 0; font-weight: 700; color: var(--if-text); }
-      .msg-bubble h3 { font-size: 1.1em; }
-      .msg-bubble h2 { font-size: 1.2em; }
-      
-      .msg-bubble ul, .msg-bubble ol { margin: 4px 0; padding-left: 24px; }
-      .msg-bubble li { margin-bottom: 4px; }
-      
-      /* Code Blocks */
-      .msg-bubble pre { 
-        background: #1e1e1e; /* Dark theme default for code */
-        color: #d4d4d4;
-        padding: 0; 
-        border-radius: 8px; 
-        overflow: hidden;
-        margin: 10px 0;
-        font-family: 'Consolas', 'Monaco', monospace; 
-        font-size: 12px;
-        border: 1px solid rgba(0,0,0,0.1);
-      }
-      .msg-bubble .code-header {
-        background: #2d2d2d;
-        color: #a0a0a0;
-        padding: 4px 10px;
-        font-size: 10px;
-        text-transform: uppercase;
-        border-bottom: 1px solid #3d3d3d;
-        display: flex;
-        justify-content: space-between;
-      }
-      .msg-bubble code.language- {
-        display: block;
-        padding: 10px;
-        overflow-x: auto;
-      }
-      
-      /* Inline Code */
-      .msg-bubble code.inline {
-        background: rgba(0,0,0,0.06);
-        color: #e01e5a;
-        padding: 2px 5px;
-        border-radius: 4px;
-        font-family: monospace;
-        font-size: 0.9em;
-      }
-
-      /* Progressive Disclosure (Details/Summary) */
-      .msg-bubble details {
-        background: rgba(0,0,0,0.03);
-        border-radius: 8px;
-        padding: 8px;
-        margin: 8px 0;
-        border: 1px solid rgba(0,0,0,0.05);
-      }
-      .msg-bubble summary {
-        cursor: pointer;
-        font-weight: 600;
-        outline: none;
-        color: var(--if-primary);
-      }
-      .msg-bubble .details-content {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid rgba(0,0,0,0.05);
-        font-size: 0.95em;
-        color: #4b5563;
-      }
-
-      .msg-bubble b { font-weight: 700; color: inherit; }
-      .msg-bubble i { font-style: italic; }
-      .msg-bubble a { color: var(--if-primary); text-decoration: underline; font-weight: 500; }
-      .msg-bubble a:hover { opacity: 0.8; }
-      
-      /* Dark Mode Overrides for text elements */
-      @media (prefers-color-scheme: dark) {
-        .msg-bubble .details-content { color: #d1d5db; }
-        .msg-bubble pre { border-color: #333; }
-        .msg-bubble code.inline { background: rgba(255,255,255,0.1); color: #ff7b72; }
+        transform: translateY(-2px);
       }
     </style>
 
     <div id="welcome-bubble">
-      <span id="bubble-text">Hii! I Can give you Assistance...</span>
+      <span id="bubble-text">Hi! How can I help you today?</span>
     </div>
     
-    <button id="btn">
-      <img id="btn-logo" src="" alt="🤖" style="display:none" />
-      <span id="btn-icon">🤖</span>
+    <button id="btn" aria-label="Open Chat">
+      <div id="btn-content">
+        <span id="btn-icon">💬</span>
+      </div>
     </button>
 
     <div id="panel">
       <div id="header">
-        <div id="header-avatar" class="avatar-circle">A</div>
-        <img id="header-logo" src="" alt="Logo" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: none;" />
+        <div id="header-identity">A</div>
         <div id="header-info">
           <div id="header-name">AI Assistant</div>
-          <div id="header-status"><span id="status-dot"></span> Online • Ready to help</div>
+          <div id="header-status"><span id="status-dot"></span> Online</div>
         </div>
-        <button id="close-btn">✕</button>
+        <button id="close-btn" aria-label="Close Chat">✕</button>
       </div>
-      <div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
-      <div id="suggestions" role="group" aria-label="Suggested responses"></div>
+      <div id="messages" role="log" aria-live="polite"></div>
+      <div id="suggestions"></div>
       <div id="input-area">
-        <input id="text" name="chatbot-message" autocomplete="off" placeholder="Type a message…" aria-label="Ask the AI assistant" />
-        <button class="send" aria-label="Send message">Send</button>
+        <input id="text" placeholder="Type a message..." autocomplete="off" />
+        <button class="send" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
       </div>
     </div>
   `;
 
   const btn = shadow.querySelector("#btn");
-  const btnLogo = shadow.querySelector("#btn-logo");
-  const btnIcon = shadow.querySelector("#btn-icon");
   const panel = shadow.querySelector("#panel");
   const closeBtn = shadow.querySelector("#close-btn");
   const messages = shadow.querySelector("#messages");
   const suggestionsContainer = shadow.querySelector("#suggestions");
   const input = shadow.querySelector("#text");
   const sendBtn = shadow.querySelector(".send");
-  /* ===============================
-     Welcome Bubble Logic
-     =============================== */
-  const bubble = shadow.querySelector("#welcome-bubble");
-  const bubbleCloseBtn = bubble.querySelector(".bubble-close");
-  const bubbleText = shadow.querySelector("#bubble-text"); // Required for auto-extract to update text
-  /* ===============================
-     Welcome Bubble Logic (Timer Based)
-     =============================== */
-
-
-  // Initial Logic: Show after 1s, Hide after 5s
-  setTimeout(() => {
-    bubble.classList.add("is-visible");
-
-    // Hide after 5 seconds of showing
-    setTimeout(() => {
-      bubble.classList.remove("is-visible");
-    }, 5000);
-  }, 1000);
-
-
-  // Dismiss logic (if they click it manually to open chat)
-  bubble.onclick = () => {
-    bubble.classList.remove("is-visible");
-    panel.style.display = "flex";
-  };
-
-  // Click bubble to open (optional, keeps existing behavior)
-  // Removed duplicate click handler
-
-  btn.onclick = () => {
-    bubble.classList.remove("is-visible");
-    panel.style.display = panel.style.display === "flex" ? "none" : "flex";
-    // Also dismiss bubble if they manually open chat
-    // localStorage.setItem(KEY_DISMISSED, "true");
-  };
-
-  closeBtn.onclick = () => {
-    panel.style.display = "none";
-  };
+  const headerIdentity = shadow.querySelector("#header-identity");
+  const headerName = shadow.querySelector("#header-name");
+  // --- IDENTITY LOGIC ---
+  function updateIdentity(name, logoUrl) {
+    if (name) {
+      headerName.textContent = name;
+      const initial = name[0].toUpperCase();
+      headerIdentity.textContent = initial;
+    }
+    if (logoUrl) {
+      headerIdentity.innerHTML = `<img src="${logoUrl}" alt="Logo" onerror="this.parentElement.textContent='${headerName.textContent[0] || 'A'}'" />`;
+    }
+  }
 
   // Auto-extract knowledge base from host website
   async function autoExtractKnowledgeBase() {
     const storageKey = `chatbot_kb_extracted_${config.connectionId}`;
-
-    // Check if already extracted
-    if (localStorage.getItem(storageKey)) {
-      console.log("✅ Knowledge base already extracted for this connection");
-      return;
-    }
+    if (localStorage.getItem(storageKey)) return;
 
     try {
       const hostUrl = window.location.origin;
-      console.log(`🔍 Auto-extracting knowledge base from: ${hostUrl}`);
-
       const response = await fetch(`${baseUrl}/api/v1/connections/${config.connectionId}/auto-extract`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: hostUrl
-        })
+        body: JSON.stringify({ url: hostUrl })
       });
 
       const data = await response.json();
-
       if (data.status === "initialized" && data.bot_identity) {
         const iden = data.bot_identity;
-        console.log("✅ Bot identity initialized:", iden.name);
-
-        // Mark as extracted
         localStorage.setItem(storageKey, "true");
-
-        // Update welcome message and bot name if provided
-        if (iden.welcomeMessage) {
-          bubbleText.textContent = iden.welcomeMessage;
-        }
-        // Update Avatar if name provided
-        if (iden.name) {
-          headerName.textContent = iden.name;
-          const initial = iden.name[0].toUpperCase();
-          const avatar = shadow.querySelector("#header-avatar");
-          if (avatar) avatar.textContent = initial;
-        }
-      } else {
-        console.warn("⚠️ Auto-extract failed or returned unexpected data:", data);
+        if (iden.welcomeMessage) bubbleText.textContent = iden.welcomeMessage;
+        updateIdentity(iden.name, iden.logoUrl);
       }
-    } catch (error) {
-      console.error("❌ Auto-extract error:", error);
-      // Don't block widget functionality if extraction fails
-    }
+    } catch (error) { }
   }
 
-  // --- SESSION PERSISTENCE ---
-  const storageKey = `chat_history_${config.connectionId}`;
-
-  // Trigger auto-extract and session load
-  // loadSession(); // Disabled to start fresh
   setTimeout(() => autoExtractKnowledgeBase(), 1000);
 
-  function loadSession() {
-    const saved = sessionStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        const history = JSON.parse(saved);
-        history.forEach(m => addMessage(m.text, m.who, false, m.index || -1));
-      } catch (e) {
-        sessionStorage.removeItem(storageKey);
-      }
-    }
-  }
-
-  function saveMessage(text, who, index = -1) {
-    const history = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
-    history.push({ text, who, index });
-    sessionStorage.setItem(storageKey, JSON.stringify(history));
-  }
-
-  function addMessage(text, who = "bot", save = true, index = -1) {
-    if (save) saveMessage(text, who, index);
-
-    const div = document.createElement("div");
-    div.className = `msg ${who}`;
-    div.setAttribute("role", "listitem");
-
-    const formattedText = text.replace(/\n/g, '<br>');
-
-    let feedbackHtml = '';
-    if (who === 'bot' && index !== -1) {
-      feedbackHtml = `
-            <div class="feedback-actions">
-                <button class="feedback-btn" title="Helpful" onclick="this.getRootNode().host.submitFeedback(${index}, 'CORRECT', this)">👍</button>
-                <button class="feedback-btn" title="Not Helpful" onclick="this.getRootNode().host.submitFeedback(${index}, 'INCORRECT', this)">👎</button>
-            </div>
-        `;
-    }
-
-    div.innerHTML = `<div class="msg-bubble">${formattedText}</div>${feedbackHtml}`;
-    messages.appendChild(div);
-    scrollToBottom();
-  }
-
-  function scrollToBottom() {
-    messages.scrollTo({
-      top: messages.scrollHeight,
-      behavior: 'smooth'
-    });
-  }
-
-  function showTyping() {
-    const div = document.createElement("div");
-    div.className = "msg bot";
-    div.id = "typing-indicator";
-    div.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-  }
-
-  function hideTyping() {
-    const typing = shadow.querySelector("#typing-indicator");
-    if (typing) typing.remove();
-  }
-
-  function showSuggestions(suggestions) {
-    suggestionsContainer.innerHTML = "";
-    if (!suggestions || suggestions.length === 0) {
-      suggestionsContainer.style.display = "none";
-      return;
-    }
-    suggestionsContainer.style.display = "flex";
-    suggestions.forEach(text => {
-      const btn = document.createElement("button");
-      btn.className = "suggestion-btn";
-      btn.textContent = text;
-      btn.onclick = () => {
-        input.value = text;
-        sendMessage();
-      };
-      suggestionsContainer.appendChild(btn);
-    });
-  }
-
-  // --- ADVANCED MARKDOWN PARSER ---
+  // --- MARKDOWN & UI HELPERS ---
   function parseMarkdown(text) {
-    // 1. Pre-processing: Escape HTML (but keep our own markers if any)
+    if (!text) return "";
     let html = text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // 2. Code Blocks (Pre-formatted)
-    // ```language\ncode\n```
-    html = html.replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
-      return `<pre><div class="code-header">${lang || 'code'}</div><code class="language-${lang}">${code.trim()}</code></pre>`;
+    // Code Blocks
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      const id = 'code-' + Math.random().toString(36).substr(2, 9);
+      return `<div style="position:relative">
+        <button class="code-copy" onclick="this.getRootNode().host.copyCode('${id}')">Copy</button>
+        <pre><code id="${id}" class="language-${lang}">${code.trim()}</code></pre>
+      </div>`;
     });
 
-    // 3. Inline Code
+    // Bold/Italic/Inline Code
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>');
     html = html.replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
 
-    // 4. Headers
-    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+    // Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
 
-    // 5. Text Styling
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-    html = html.replace(/__([^_]+)__/g, '<b>$1</b>');
-    html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>');
-    html = html.replace(/_([^_]+)_/g, '<i>$1</i>');
+    return html.replace(/\n/g, '<br>');
+  }
 
-    // 6. Links
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  container.copyCode = (id) => {
+    const el = shadow.querySelector(`#${id}`);
+    if (el) {
+      navigator.clipboard.writeText(el.innerText);
+      const btnEl = el.closest('div').querySelector('.code-copy');
+      const old = btnEl.innerText;
+      btnEl.innerText = 'Copied!';
+      setTimeout(() => btnEl.innerText = old, 2000);
+    }
+  };
 
-    // 7. Unordered Lists
-    // Match line starting with -, *, or +
-    html = html.replace(/^\s*[-*+]\s+(.*)$/gm, '<li>$1</li>');
-    // Wrap adjacent <li>'s in <ul>
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  function scrollToBottom() {
+    messages.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
+  }
 
-    // 8. Ordered Lists
-    html = html.replace(/^\s*\d+\.\s+(.*)$/gm, '<li class="ord">$1</li>');
-    html = html.replace(/(<li class="ord">.*<\/li>)/s, '<ol>$1</ol>');
-
-    // 9. Tables (Simple GFM)
-    // | Header | Header |
-    // | --- | --- |
-    // | Cell | Cell |
-    // Logic: Look for lines with pipes. This is complex to do with simple Regex, 
-    // but we can catch a basic table structure.
-    // For simplicity in this widget, we'll skip complex table parsing to avoid bloat, 
-    // unless user explicitly requests complex tables. 
-    // Plan: Render tables as <pre> for now or simple grid if needed.
-
-    // 10. Progressive Disclosure (Details/Summary)
-    // ::: Summary Text \n Content \n :::
-    html = html.replace(/::: (.+?)\n([\s\S]+?)\n:::/g, '<details><summary>$1</summary><div class="details-content">$2</div></details>');
-
-    // 11. Newlines to <br> (Handle block-level elements to avoid extra spacing)
-    // First, temporarily remove newlines inside tags we just created to prevent double spacing
-    const blocks = ['ul', 'ol', 'pre', 'h1', 'h2', 'h3', 'details'];
-
-    // Replace newline with <br> ONLY if not preceded/followed by a block tag
-    // This is a heuristic. A robust parser handles AST.
-    html = html.replace(/\n/g, '<br>');
-
-    // Cleanup: Remove <br> around block tags
-    blocks.forEach(tag => {
-      const reStart = new RegExp(`<br><${tag}`, 'g');
-      const reEnd = new RegExp(`</${tag}><br>`, 'g');
-      html = html.replace(reStart, `<${tag}`).replace(reEnd, `</${tag}>`);
+  function showSuggestions(list) {
+    suggestionsContainer.innerHTML = "";
+    if (!list || list.length === 0) return;
+    list.forEach(s => {
+      const b = document.createElement("button");
+      b.className = "suggestion-btn";
+      b.textContent = s;
+      b.onclick = () => sendMessage(s);
+      suggestionsContainer.appendChild(b);
     });
-
-    return html;
   }
 
   async function sendMessage(textOverride) {
@@ -908,20 +628,22 @@
     if (!text) return;
 
     // 1. User Message
-    addMessage(text, "user");
+    const userDiv = document.createElement("div");
+    userDiv.className = "msg user";
+    userDiv.innerHTML = `<div class="msg-bubble">${parseMarkdown(text)}</div>`;
+    messages.appendChild(userDiv);
     input.value = "";
-    showSuggestions([]); // Hide suggestions
-
-    // 2. Setup Bot Message Placeholder
-    const botMsgId = Date.now().toString();
-    // Create an empty bot message immediately
-    const div = document.createElement("div");
-    div.className = "msg bot";
-    div.innerHTML = `<div class="msg-bubble typing-pulse"></div>`; // Start with a pulse
-    messages.appendChild(div);
+    showSuggestions([]);
     scrollToBottom();
 
-    const bubbleContent = div.querySelector(".msg-bubble");
+    // 2. Setup Bot Message Placeholder
+    const botDiv = document.createElement("div");
+    botDiv.className = "msg bot";
+    botDiv.innerHTML = `<div class="msg-bubble typing"><span></span><span></span><span></span></div>`;
+    messages.appendChild(botDiv);
+    scrollToBottom();
+
+    const bubbleContent = botDiv.querySelector(".msg-bubble");
     let fullText = "";
 
     try {
@@ -936,284 +658,56 @@
         })
       });
 
-      if (!response.ok) throw new Error("Server Error");
+      if (!response.ok) throw new Error();
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 
-      bubbleContent.classList.remove("typing-pulse"); // Remove pulse once stream starts
-
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-
+        buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n\n");
-        buffer = lines.pop(); // Keep partial line
+        buffer = lines.pop();
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const dataStr = line.replace("data: ", "");
-            if (dataStr === "[DONE]") return; // Standard OpenAI format (just in case)
+            if (dataStr === "[DONE]") break;
 
             try {
               const data = JSON.parse(dataStr);
-
               if (data.token) {
                 fullText += data.token;
-
-                // Check for Quick Reply Delimiter
-                const splitParts = fullText.split('|||');
-                const visibleText = splitParts[0];
-
-                // Render Markdown incrementally (only the visible part)
-                bubbleContent.innerHTML = parseMarkdown(visibleText);
+                const parts = fullText.split("|||");
+                bubbleContent.innerHTML = parseMarkdown(parts[0]);
+                if (parts[1]) showSuggestions(parts[1].split("|").filter(s => s.trim()));
                 scrollToBottom();
-
-                // If we have suggestions (part 2), parse them
-                if (splitParts.length > 1) {
-                  const rawSuggestions = splitParts[1];
-                  const suggestions = rawSuggestions.split('|').filter(s => s.trim().length > 0);
-                  if (suggestions.length > 0) {
-                    showSuggestions(suggestions);
-                  }
-                }
               }
-
-              if (data.done) {
-                // Finalize
-              }
-
-              if (data.error) {
-                bubbleContent.textContent = "Error: " + data.error;
-              }
-
-              // Handle Metadata (Sources, Gating)
-              if (data.type === 'metadata' && data.data) {
-                // We can store this to show sources later logic
-                // For now, just log
-                console.log("Sources:", data.data.sources);
-              }
-
-              // Handle Quick Replies from Metadata
-              if (data.type === 'metadata' && data.data) {
-                // Store metadata for later use or logging
-                // Example: if (data.data.confidenceScore < 0.7) { ... }
-              }
-
-            } catch (e) {
-              // Ignore parse errors for partial JSON
-            }
+            } catch (e) { }
           }
         }
       }
-
-      // Save full message to history (exclude suggestions from saved text)
-      const cleanText = fullText.split('|||')[0];
-      saveMessage(text, "user");
-      saveMessage(cleanText, "bot");
-
     } catch (e) {
-      bubbleContent.textContent = "⚠️ Connection lost. Please try again.";
-      console.error(e);
+      bubbleContent.innerHTML = "⚠️ Connection lost. Please try again.";
     }
-  }
-
-  function handleClientAction(action) {
-    if (!action) return;
-
-    try {
-      if (action.type === "CLICK" || action.type === "NAVIGATE") {
-        let el = null;
-        if (action.selector) {
-          // Try precise selector
-          el = document.querySelector(action.selector);
-        }
-
-        // Fallback: Text search (jQuery style contains)
-        if (!el && action.text) {
-          const all = document.querySelectorAll("button, a");
-          for (let node of all) {
-            if (node.textContent.toLowerCase().includes(action.text.toLowerCase())) {
-              el = node;
-              break;
-            }
-          }
-        }
-
-        if (el) {
-          highlightElement(el);
-          setTimeout(() => {
-            el.click();
-            if (action.href && el.tagName === "A") {
-              window.location.href = action.href; // Force nav if click doesn't work
-            }
-          }, 1000); // Wait for user to see highlight
-        } else {
-          console.warn("❌ Could not find element for action:", action);
-        }
-
-      } else if (action.type === "FILL_FORM") {
-        // Find form
-        const forms = document.querySelectorAll("form");
-        let targetForm = Array.from(forms).find(f => f.id === action.formName || f.name === action.formName);
-
-        // Fallback: finding inputs globally if form name is fuzzy
-        if (!targetForm) targetForm = document;
-
-        if (action.data) {
-          for (const [key, value] of Object.entries(action.data)) {
-            const input = targetForm.querySelector(`[name="${key}"]`);
-            if (input) {
-              highlightElement(input);
-              input.value = value;
-              // Dispatch event so React/Vue notices
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-          }
-        }
-
-        // Submitting?
-        if (targetForm && targetForm.tagName === "FORM") {
-          setTimeout(() => {
-            // targetForm.submit(); // Aggressive! Maybe just let user click submit?
-            const submitBtn = targetForm.querySelector('[type="submit"], button:not([type])');
-            if (submitBtn) {
-              highlightElement(submitBtn);
-              // submitBtn.click(); // Auto-click or just show? Let's simply highlight for now.
-            }
-          }, 1500);
-        }
-      }
-
-    } catch (err) {
-      console.error("Action handler failed:", err);
-    }
-  }
-
-  function highlightElement(el) {
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    const originalBorder = el.style.border;
-    const originalBoxShadow = el.style.boxShadow;
-    const originalTransition = el.style.transition;
-
-    el.style.transition = "all 0.5s ease";
-    el.style.border = "2px solid #667eea";
-    el.style.boxShadow = "0 0 15px rgba(102, 126, 234, 0.6)";
-
-    setTimeout(() => {
-      el.style.border = originalBorder;
-      el.style.boxShadow = originalBoxShadow;
-      el.style.transition = originalTransition;
-    }, 2000);
-  }
-
-  function showError(msg) {
-    const div = document.createElement("div");
-    div.className = "msg system-error-msg";
-    div.style.cssText = "color: #ef4444; font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: 500;";
-    div.innerHTML = `⚠️ ${msg}`;
-    messages.appendChild(div);
-    scrollToBottom();
   }
 
   sendBtn.onclick = () => sendMessage();
-  input.addEventListener("keydown", e => e.key === "Enter" && sendMessage());
+  input.onkeydown = e => e.key === "Enter" && sendMessage();
 
-  // Get host website favicon
-  function getFavicon() {
-    // Try to find favicon from link tags
-    const links = document.querySelectorAll('link[rel*="icon"]');
-    for (const link of links) {
-      if (link.href) return link.href;
-    }
-
-    // Fallback logic
-    if (window.location.protocol === 'file:') {
-      return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    }
-
-    // Instead of origin, let's use the baseUrl (the backend) for a generic fallback if possible
-    // or just return null and let the icon-span take over.
-    return null;
-  }
-
-  // Set up header with favicon and name
-  const headerLogo = shadow.querySelector("#header-logo");
-  const headerName = shadow.querySelector("#header-name");
-
-  // Load favicon for header and button
-  const faviconUrl = getFavicon();
-
-  // Set header logo
-  headerLogo.src = faviconUrl;
-  headerLogo.onload = () => { headerLogo.style.display = 'block'; };
-  headerLogo.onerror = () => { headerLogo.style.display = 'none'; };
-
-  // Set button logo
-  btnLogo.src = faviconUrl;
-  btnLogo.onload = () => {
-    btnLogo.style.display = 'block';
-    btnIcon.style.display = 'none';
-  };
-  btnLogo.onerror = () => {
-    btnLogo.style.display = 'none';
-    btnIcon.style.display = 'block';
-  };
-
-  // Fetch welcome info from server
+  // Load welcome data
   fetch(`${baseUrl}/api/v1/chat/welcome/${config.connectionId}`)
     .then(r => r.json())
     .then(data => {
-      if (data.assistantName) {
-        headerName.textContent = data.assistantName;
-        const initial = data.assistantName[0].toUpperCase();
-        const avatar = shadow.querySelector("#header-avatar");
-        if (avatar) avatar.textContent = initial;
-      }
-      if (data.welcomeMessage) {
-        bubbleText.textContent = data.welcomeMessage;
-      }
-    })
-    .catch(() => { });
-  // --- DEBUGGING TOOL ---
+      updateIdentity(data.assistantName, data.logoUrl);
+      if (data.welcomeMessage) bubbleText.textContent = data.welcomeMessage;
+    }).catch(() => { });
+
   window.ChatbotDebug = () => {
-    console.group("🤖 Chatbot Debugger");
-    console.log("Status: Initialized");
-    console.log("Config:", config);
-    console.log("Container in Body:", document.body.contains(container));
-    console.log("Z-Index:", container.style.zIndex);
-
-    const elements = {
-      "Button (#btn)": btn,
-      "Panel (#panel)": panel,
-      "Messages (#messages)": messages,
-      "Input (#text)": input,
-      "Welcome Bubble": bubble
-    };
-
-    let allGood = true;
-    for (const [name, el] of Object.entries(elements)) {
-      if (el) {
-        console.log(`✅ ${name}: Found`, el);
-      } else {
-        console.error(`❌ ${name}: MISSING`);
-        allGood = false;
-      }
-    }
-
-    if (allGood) {
-      console.log("🎉 All systems go! Widget elements are present.");
-    } else {
-      console.warn("⚠️ Some elements are missing. Check console errors.");
-    }
-    console.groupEnd();
+    console.log("🤖 Config:", config);
+    console.log("🤖 Backend:", baseUrl);
   };
-
-  console.log("🤖 Chatbot Widget Loaded. Run window.ChatbotDebug() to verify.");
 })();
