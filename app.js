@@ -136,10 +136,19 @@ app.use("/api", (req, res, next) => {
   });
 });
 
-// ADMIN PANEL (Protected)
+// Auth verification endpoint for React login
 const basicAuth = require("./middleware/auth");
-app.get("/admin", basicAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin.html"));
+app.get("/api/v1/auth/verify", basicAuth, (req, res) => {
+  res.json({ success: true, user: req.user });
+});
+
+// ADMIN PANEL — Serve React SPA from admin-ui/dist
+app.use('/admin', express.static(path.join(__dirname, 'admin-ui', 'dist')));
+app.get('/admin/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-ui', 'dist', 'index.html'));
+});
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-ui', 'dist', 'index.html'));
 });
 
 // ERROR HANDLER (Last Middleware)
